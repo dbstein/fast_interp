@@ -4,6 +4,7 @@ import scipy.interpolate
 import time
 from fast_interp import interp1d
 import matplotlib as mpl
+mpl.use('TkAgg')
 import matplotlib.pyplot as plt
 plt.ion()
 
@@ -63,6 +64,8 @@ ax.plot(ntest, my_errors[:,2], color='purple', label='This, Qunitic')
 ax.plot(ntest, sp_errors[:,0], color='black',  linestyle='--', label='Scipy, Linear')
 ax.plot(ntest, sp_errors[:,1], color='blue',   linestyle='--', label='Scipy, Cubic')
 ax.plot(ntest, sp_errors[:,2], color='purple', linestyle='--', label='Scipy, Qunitic')
+ax.set_xlabel(r'$n$')
+ax.set_ylabel('Maximum Error')
 ax.set_xscale('log')
 ax.set_yscale('log')
 ax.set_title('Error')
@@ -75,6 +78,8 @@ ax.plot(ntest, my_setup_time[:,2], color='purple', label='This, Qunitic')
 ax.plot(ntest, sp_setup_time[:,0], color='black',  linestyle='--', label='Scipy, Linear')
 ax.plot(ntest, sp_setup_time[:,1], color='blue',   linestyle='--', label='Scipy, Cubic')
 ax.plot(ntest, sp_setup_time[:,2], color='purple', linestyle='--', label='Scipy, Qunitic')
+ax.set_xlabel(r'$n$')
+ax.set_ylabel('Time (ms)')
 ax.set_xscale('log')
 ax.set_yscale('log')
 ax.set_title('Setup Time')
@@ -87,9 +92,21 @@ ax.plot(ntest, my_eval_time[:,2], color='purple', label='This, Qunitic')
 ax.plot(ntest, sp_eval_time[:,0], color='black',  linestyle='--', label='Scipy, Linear')
 ax.plot(ntest, sp_eval_time[:,1], color='blue',   linestyle='--', label='Scipy, Cubic')
 ax.plot(ntest, sp_eval_time[:,2], color='purple', linestyle='--', label='Scipy, Qunitic')
+ax.set_xlabel(r'$n$')
+ax.set_ylabel('Time (ms)')
 ax.set_xscale('log')
 ax.set_yscale('log')
 ax.set_title('Evaluation Time')
+ax.legend()
+
+fig, ax = plt.subplots(1,1)
+ax.plot(ntest, sp_eval_time[:,0]/my_eval_time[:,0], color='black',  label='Linear')
+ax.plot(ntest, sp_eval_time[:,1]/my_eval_time[:,1], color='blue',   label='Cubic')
+ax.plot(ntest, sp_eval_time[:,2]/my_eval_time[:,2], color='purple', label='Qunitic')
+ax.set_xlabel(r'$n$')
+ax.set_ylabel('Ratio (scipy/this)')
+ax.set_xscale('log')
+ax.set_title('Evaluation Time Ratio')
 ax.legend()
 
 ################################################################################

@@ -1,6 +1,6 @@
 # fast_interp: numba accelerated interpolation on regular grids in 1, 2, and 3 dimensions
 
-This code provides a nearly drop-in replacement for the scipy interpolation functions for *regular* arrays that is significantly faster. Interpolation in 1D is done by evaluating local Taylor expansions to the required order; derivatives are estimated using finite differences. Some rearrangment of terms and order of evaluation makes the code surprisingly stable. Usage is as follows:
+This code provides a nearly drop-in replacement for the scipy interpolation functions for *regular* arrays that is significantly faster. Like the scipy.interpolate functions, this function is **asmptotically accurate up to the boundary**. Interpolation in 1D is done by evaluating local Taylor expansions to the required order; derivatives are estimated using finite differences. Some rearrangment of terms and order of evaluation makes the code surprisingly stable. Usage is as follows:
 
 ```python
 from fast_interp import interp1d
@@ -13,9 +13,9 @@ It also allows the user to specify that any number of axes are periodic; if they
 
 ## Performance
 
-On my machine with 12 cores, this function varies between being about the same speed as the scipy function (for small evaluations), to being up to several hundred times faster for large evaluations (besides getting the parallel and SIMD boost from numba, it also actually scales better, since it doesn't have to hunt for the cell that the interpolation point is located in).
+On my machine with 12 cores, this function varies between being about the same speed as the scipy function (for small evaluations), to being 1000+ times faster for large evaluations (besides getting the parallel and SIMD boost from numba, it actually scales better, since it doesn't have to hunt for the cell that the interpolation point is located in).
 
-While there are other numba based interpolation routines out there (e.g. [this one](https://github.com/EconForge/interpolation.py)), they are not accurate to the domain boundaries for k > 1, and require a fitting stage. This function requires no fitting. The setup cost (except in the case of non-periodic linear interpolation), is extremely minimal, only requiring the allocation of a padded array that is slightly larger than the given data.
+While there are other fast interpolation routines (like map_coordinates), and other numba based interpolation routines out there (e.g. [this one](https://github.com/EconForge/interpolation.py)), they are not accurate to the domain boundaries for k > 1, and require a fitting stage. This function requires no fitting; the setup cost, is extremely minimal, only requiring the allocation of a padded array that is slightly larger than the given data. Non-periodic linear interpolation does not require any padding and has effectively no setup cost.
 
 ## To do, perhaps:
 

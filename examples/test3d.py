@@ -4,6 +4,7 @@ import scipy.interpolate
 import time
 from fast_interp import interp3d
 import matplotlib as mpl
+mpl.use('TkAgg')
 import matplotlib.pyplot as plt
 plt.ion()
 
@@ -47,6 +48,8 @@ ax.plot(ntest, my_errors[:,2], color='purple', label='Qunitic')
 ax.plot(nts, 2*nts**-2, color='black', alpha=0.7, label=r'$\mathcal{O}(h^2)$')
 ax.plot(nts, 0.5*nts**-4, color='black', alpha=0.5, label=r'$\mathcal{O}(h^4)$')
 ax.plot(nts, 0.5*nts**-6, color='black', alpha=0.3, label=r'$\mathcal{O}(h^6)$')
+ax.set_xlabel(r'$n$')
+ax.set_ylabel('Maximum Error')
 ax.set_xscale('log')
 ax.set_yscale('log')
 ax.set_title('Error')

@@ -202,7 +202,7 @@ def _extrapolate1d(f, k, periodic):
         return _extrapolate1d_periodic(f, k, periodic)
 def _extrapolate1d_periodic(f, k, periodic):
     offset = k//2
-    fb = np.empty(f.shape[0] + 2*offset + int(periodic), dtype=f.dtype)
+    fb = np.zeros(f.shape[0] + 2*offset + int(periodic), dtype=f.dtype)
     _fill1(f, fb, offset)
     _extrapolate1d_x(fb, k, periodic)
     return fb
@@ -361,7 +361,7 @@ def _extrapolate2d(f, k, periodic):
 def _extrapolate2d_periodic(f, k, periodic):
     offset = k//2
     newsh = [n + 2*offset + int(p) for n, p in zip(f.shape, periodic)]
-    fb = np.empty(newsh, dtype=f.dtype)
+    fb = np.zeros(newsh, dtype=f.dtype)
     _fill2(f, fb, offset)
     _extrapolate1d_x(fb, k, periodic[0])
     _extrapolate1d_y(fb, k, periodic[1])
@@ -564,7 +564,7 @@ def _extrapolate3d(f, k, periodic):
 def _extrapolate3d_periodic(f, k, periodic):
     offset = k//2
     newsh = [n + 2*offset + int(p) for n, p in zip(f.shape, periodic)]
-    fb = np.empty(newsh, dtype=f.dtype)
+    fb = np.zeros(newsh, dtype=f.dtype)
     _fill3(f, fb, offset)
     _extrapolate1d_x(fb, k, periodic[0])
     _extrapolate1d_y(fb, k, periodic[1])
