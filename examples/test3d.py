@@ -7,6 +7,8 @@ import matplotlib as mpl
 mpl.use('TkAgg')
 import matplotlib.pyplot as plt
 plt.ion()
+import gc
+gc.disable()
 
 ################################################################################
 # Basic error sweep
@@ -38,6 +40,8 @@ for ki, k in enumerate(ktest):
 		interpolater = interp3d(v, v, v, f, k=k)
 		fe = interpolater(xo, yo, zo)
 		my_errors[ni, ki] = np.abs(fe - fa).max()
+
+		gc.collect()
 
 nts = ntest[1:-1].astype(float)
 
@@ -79,6 +83,8 @@ fe = interpolater(xo, yo, zo)
 err = np.abs(fe - fa).max()
 print('...Error in interpolating to shaped array: {:0.1e}'.format(err))
 
+gc.collect()
+
 ################################################################################
 # Test with periodic boundaries
 
@@ -104,6 +110,8 @@ for n in [20, 40, 80, 160]:
 	err = np.abs(fe - fa).max()
 	print('...Error is: {:0.1e}'.format(err))
 
+	gc.collect()
+
 print('\n----- Testing Periodic Linear Interpolation, x-direction -----')
 
 for n in [20, 40, 80, 160]:
@@ -127,6 +135,8 @@ for n in [20, 40, 80, 160]:
 	fe = interpolater(xo, yo, zo)
 	err = np.abs(fe - fa).max()
 	print('...Error is: {:0.1e}'.format(err))
+
+	gc.collect()
 
 print('\n----- Testing Periodic Cubic Interpolation, x, z-directions -----')
 
@@ -152,5 +162,6 @@ for n in [20, 40, 80, 160]:
 	err = np.abs(fe - fa).max()
 	print('...Error is: {:0.1e}'.format(err))
 
+	gc.collect()
 
 

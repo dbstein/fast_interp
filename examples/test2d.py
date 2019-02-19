@@ -7,13 +7,14 @@ import matplotlib as mpl
 mpl.use('TkAgg')
 import matplotlib.pyplot as plt
 plt.ion()
+import gc
 
 ################################################################################
 # Basic error sweep
 
 print('\n----- Testing Error and Timings vs. Scipy -----')
 
-ntest = 10*2**np.arange(9)
+ntest = 10*2**np.arange(8)
 ktest = [1, 3, 5]
 my_errors = np.zeros([ntest.shape[0], 3], dtype=float)
 sp_errors = np.zeros([ntest.shape[0], 3], dtype=float)
@@ -21,6 +22,8 @@ my_setup_time = np.zeros([ntest.shape[0], 3], dtype=float)
 sp_setup_time = np.zeros([ntest.shape[0], 3], dtype=float)
 my_eval_time = np.zeros([ntest.shape[0], 3], dtype=float)
 sp_eval_time = np.zeros([ntest.shape[0], 3], dtype=float)
+
+gc.disable()
 
 for ki, k in enumerate(ktest):
 	print('--- Testing for k =', k, '---')
@@ -41,6 +44,9 @@ for ki, k in enumerate(ktest):
 		# run once to compile numba functions
 		interpolater = interp2d(v, v, f, k=k)
 		fe = interpolater(xo, yo)
+		del interpolater
+		gc.collect()
+
 		# fast_interp
 		st = time.time()
 		interpolater = interp2d(v, v, f, k=k)
@@ -50,6 +56,9 @@ for ki, k in enumerate(ktest):
 		my_eval_time[ni, ki] = (time.time()-st)*1000
 		my_errors[ni, ki] = np.abs(fe - fa).max()
 
+		del interpolater
+		gc.collect()
+
 		# scipy interp
 		st = time.time()
 		interpolater = sp.interpolate.RectBivariateSpline(v, v, f, kx=k, ky=k)
@@ -58,6 +67,11 @@ for ki, k in enumerate(ktest):
 		fe = interpolater.ev(xo, yo)
 		sp_eval_time[ni, ki] = (time.time()-st)*1000
 		sp_errors[ni, ki] = np.abs(fe - fa).max()
+
+		del interpolater
+		gc.collect()
+
+gc.enable()
 
 fig, ax = plt.subplots(1,1)
 ax.plot(ntest, my_errors[:,0], color='black',  label='This, Linear')
@@ -108,6 +122,7 @@ ax.plot(ntest, sp_eval_time[:,2]/my_eval_time[:,2], color='purple', label='Qunit
 ax.set_xlabel(r'$n$')
 ax.set_ylabel('Ratio (scipy/this)')
 ax.set_xscale('log')
+ax.set_yscale('log')
 ax.set_title('Evaluation Time Ratio')
 ax.legend()
 
@@ -198,5 +213,29 @@ for n in [20, 40, 80, 160]:
 	err = np.abs(fe - fa).max()
 	print('...Error is: {:0.1e}'.format(err))
 
+print('\n----- Single point on large grid far from edges -----')
 
+del interpolater
+gc.disable()
 
+n = 5000
+print('...for n =', n)
+xv, xh = np.linspace(0, 1, n, endpoint=True, retstep=True)
+yv, yh = np.linspace(0, 2*np.pi, n, endpoint=False, retstep=True)
+x, y = np.meshgrid(xv, yv, indexing='ij')
+xo = 0.5
+yo = 0.4
+
+test_function = lambda x, y: np.exp(x)*np.exp(np.sin(y))
+f = test_function(x, y)
+fa = test_function(xo, yo)
+
+st = time.time()
+interpolater = interp2d(xv, yv, f, k=3, periodic=[False,True], noclose=True)
+fe = interpolater(xo, yo)
+et = time.time()
+err = np.abs(fe - fa).max()
+print('Time to setup and interpolate (ms): {:0.1f}'.format((et - st)*1000))
+print('...Error is:                        {:0.1e}'.format(err))
+
+gc.collect()

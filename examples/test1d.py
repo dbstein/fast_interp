@@ -7,6 +7,8 @@ import matplotlib as mpl
 mpl.use('TkAgg')
 import matplotlib.pyplot as plt
 plt.ion()
+import gc
+gc.disable()
 
 ################################################################################
 # Basic error sweep
@@ -57,6 +59,8 @@ for ki, k in enumerate(ktest):
 		sp_eval_time[ni, ki] = (time.time()-st)*1000
 		sp_errors[ni, ki] = np.abs(fe - fa).max()
 
+		gc.collect()
+
 fig, ax = plt.subplots(1,1)
 ax.plot(ntest, my_errors[:,0], color='black',  label='This, Linear')
 ax.plot(ntest, my_errors[:,1], color='blue',   label='This, Cubic')
@@ -106,6 +110,7 @@ ax.plot(ntest, sp_eval_time[:,2]/my_eval_time[:,2], color='purple', label='Qunit
 ax.set_xlabel(r'$n$')
 ax.set_ylabel('Ratio (scipy/this)')
 ax.set_xscale('log')
+ax.set_yscale('log')
 ax.set_title('Evaluation Time Ratio')
 ax.legend()
 
@@ -129,6 +134,8 @@ fe = interpolater(test_x)
 err = np.abs(fe - fa).max()
 print('...Error in interpolating to shaped array: {:0.1e}'.format(err))
 
+gc.collect()
+
 ################################################################################
 # Test with periodic boundaries
 
@@ -150,5 +157,6 @@ for n in [20, 40, 80, 160]:
 	err = np.abs(fe - fa).max()
 	print('...Error is: {:0.1e}'.format(err))
 
+	gc.collect()
 
 
