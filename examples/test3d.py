@@ -24,7 +24,7 @@ for ki, k in enumerate(ktest):
 	for ni, n in enumerate(ntest):
 		print('   ...n =', n)
 
-		v, h = np.linspace(0, 1, n, endpoint=True, retstep=True)
+		v, h = np.linspace(0.1, 1, n, endpoint=True, retstep=True)
 		x, y, z = np.meshgrid(v, v, v, indexing='ij')
 		xo = x[:-1, :-1, :-1].flatten()
 		yo = y[:-1, :-1, :-1].flatten()
@@ -164,4 +164,32 @@ for n in [20, 40, 80, 160]:
 
 	gc.collect()
 
+print('\n----- Single point on large grid far from edges -----')
+
+del interpolater
+gc.disable()
+
+n = 500
+print('...for n =', n)
+xv, xh = np.linspace(0, 1, n, endpoint=True, retstep=True)
+yv, yh = np.linspace(0, 2*np.pi, n, endpoint=False, retstep=True)
+zv, zh = np.linspace(0, 2*np.pi, n, endpoint=False, retstep=True)
+x, y, z = np.meshgrid(xv, yv, zv, indexing='ij')
+xo = 0.5
+yo = 0.4
+zo = 0.3
+
+test_function = lambda x, y, z: np.exp(x)*np.exp(np.sin(y))*np.cos(z)
+f = test_function(x, y, z)
+fa = test_function(xo, yo, zo)
+
+st = time.time()
+interpolater = interp3d(xv, yv, zv, f, k=5, periodic=[False,True,True], noclose=True)
+fe = interpolater(xo, yo, zo)
+et = time.time()
+err = np.abs(fe - fa).max()
+print('Time to setup and interpolate (ms): {:0.1f}'.format((et - st)*1000))
+print('...Error is:                        {:0.1e}'.format(err))
+
+gc.collect()
 

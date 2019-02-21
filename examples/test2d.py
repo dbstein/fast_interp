@@ -14,7 +14,7 @@ import gc
 
 print('\n----- Testing Error and Timings vs. Scipy -----')
 
-ntest = 10*2**np.arange(8)
+ntest = 10*2**np.arange(9)
 ktest = [1, 3, 5]
 my_errors = np.zeros([ntest.shape[0], 3], dtype=float)
 sp_errors = np.zeros([ntest.shape[0], 3], dtype=float)
@@ -30,7 +30,7 @@ for ki, k in enumerate(ktest):
 	for ni, n in enumerate(ntest):
 		print('   ...n =', n)
 
-		v, h = np.linspace(0, 1, n, endpoint=True, retstep=True)
+		v, h = np.linspace(0.5, 1, n, endpoint=True, retstep=True)
 		x, y = np.meshgrid(v, v, indexing='ij')
 		xo = x[:-1, :-1].flatten()
 		yo = y[:-1, :-1].flatten()
@@ -218,7 +218,7 @@ print('\n----- Single point on large grid far from edges -----')
 del interpolater
 gc.disable()
 
-n = 5000
+n = 10000
 print('...for n =', n)
 xv, xh = np.linspace(0, 1, n, endpoint=True, retstep=True)
 yv, yh = np.linspace(0, 2*np.pi, n, endpoint=False, retstep=True)
@@ -231,7 +231,7 @@ f = test_function(x, y)
 fa = test_function(xo, yo)
 
 st = time.time()
-interpolater = interp2d(xv, yv, f, k=3, periodic=[False,True], noclose=True)
+interpolater = interp2d(xv, yv, f, k=5, periodic=[False,True], noclose=True)
 fe = interpolater(xo, yo)
 et = time.time()
 err = np.abs(fe - fa).max()

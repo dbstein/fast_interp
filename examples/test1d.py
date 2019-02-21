@@ -29,7 +29,7 @@ for ki, k in enumerate(ktest):
 	for ni, n in enumerate(ntest):
 		print('   ...n =', n)
 
-		x, h = np.linspace(0, 1, n, endpoint=True, retstep=True)
+		x, h = np.linspace(0.5, 1.0, n, endpoint=True, retstep=True)
 		test_x = (x + np.random.rand(*x.shape)*h)[:-1]
 
 		def test_function(x):

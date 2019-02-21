@@ -122,12 +122,13 @@ class interp1d(object):
         self.periodic = periodic
         self.noclose = noclose
         self._dtype = f.dtype
-        self._hx, self._fb = _prepare1d(xv, k, periodic, f, noclose)
+        self._ax, self._hx, self._fb = _prepare1d(xv, k, periodic, f, noclose)
     def __call__(self, xout, fout=None):
         """
         Interpolate to xout
         xout must be a float or a ndarray of floats
         """
+        func = INTERP_1D[self.k]
         if isinstance(xout, np.ndarray):
             m = int(np.prod(xout.shape))
             copy_made = False
@@ -138,22 +139,22 @@ class interp1d(object):
                 if _out.base is None:
                     copy_made = True
             _xout = xout.ravel()
-            if self.k == 1:
-                _interp1d_k1(self._fb, _xout, _out, self._hx)
-            elif self.k == 3:
-                _interp1d_k3(self._fb, _xout, _out, self._hx, self.noclose)
-            else:
-                _interp1d_k5(self._fb, _xout, _out, self._hx, self.noclose)
-        if copy_made:
-            fout[:] = _out
-        return _out.reshape(xout.shape)
+            func(self._fb, _xout, _out, self._ax, self._hx, self.noclose)
+            if copy_made:
+                fout[:] = _out
+            return _out.reshape(xout.shape)
+        else:
+            _xout = np.array([xout],)
+            _out = np.empty(1)
+            func(self._fb, _xout, _out, self._ax, self._hx, self.noclose)
+            return _out[0]
 
 # the actual interpolation routines
 @numba.njit(parallel=True)
-def _interp1d_k1(f, xout, fout, hx):
+def _interp1d_k1(f, xout, fout, ax, hx, noclose):
     m = fout.shape[0]
     for mi in numba.prange(m):
-        xx = xout[mi]
+        xx = xout[mi] - ax
         ix = int(xx//hx)
         dx = xx - (ix+0.5)*hx
         ratx = dx/hx
@@ -165,11 +166,11 @@ def _interp1d_k1(f, xout, fout, hx):
             sp += f[ix+i]*asx[i]
         fout[mi] = sp
 @numba.njit(parallel=True)
-def _interp1d_k3(f, xout, fout, hx, noclose):
+def _interp1d_k3(f, xout, fout, ax, hx, noclose):
     ofs = -1 if noclose else 0
     m = fout.shape[0]
     for mi in numba.prange(m):
-        xx = xout[mi]
+        xx = xout[mi] - ax
         ix = int(xx//hx)
         dx = xx - (ix+0.5)*hx
         ratx = dx/hx
@@ -184,11 +185,11 @@ def _interp1d_k3(f, xout, fout, hx, noclose):
             sp += f[ix+i]*asx[i]
         fout[mi] = sp
 @numba.njit(parallel=True)
-def _interp1d_k5(f, xout, fout, hx, noclose):
+def _interp1d_k5(f, xout, fout, ax, hx, noclose):
     ofs = -2 if noclose else 0
     m = fout.shape[0]
     for mi in numba.prange(m):
-        xx = xout[mi]
+        xx = xout[mi] - ax
         ix = int(xx//hx)
         dx = xx - (ix+0.5)*hx
         ratx = dx/hx
@@ -205,11 +206,13 @@ def _interp1d_k5(f, xout, fout, hx, noclose):
             sp += f[ix+i]*asx[i]
         fout[mi] = sp
 
+INTERP_1D = [None, _interp1d_k1, None, _interp1d_k3, None, _interp1d_k5]
+
 # preparation and extrapolation routines
 def _prepare1d(xv, k, periodic, f, noclose):
     hx = xv[1] - xv[0]
     fb = f if noclose else _extrapolate1d(f, k, periodic)
-    return hx, fb
+    return xv[0], hx, fb
 def _extrapolate1d(f, k, periodic):
     if k == 1 and not periodic:
         return f
@@ -261,13 +264,14 @@ class interp2d(object):
         self.periodic = periodic
         self.noclose = noclose
         self._dtype = f.dtype
-        self._hx, self._hy, self._fb = _prepare2d(xv, yv, k, periodic, f, noclose)
+        self._ax, self._ay, self._hx, self._hy, self._fb = _prepare2d(xv, yv, k, periodic, f, noclose)
     def __call__(self, xout, yout, fout=None):
         """
         Interpolate to xout
         For 1-D interpolation, xout must be a float
             or a ndarray of floats
         """
+        func = INTERP_2D[self.k]
         if isinstance(xout, np.ndarray):
             m = int(np.prod(xout.shape))
             copy_made = False
@@ -279,12 +283,7 @@ class interp2d(object):
                     copy_made = True
             _xout = xout.ravel()
             _yout = yout.ravel()
-            if self.k == 1:
-                _interp2d_k1(self._fb, _xout, _yout, _out, self._hx, self._hy)
-            elif self.k == 3:
-                _interp2d_k3(self._fb, _xout, _yout, _out, self._hx, self._hy, self.noclose)
-            else:
-                _interp2d_k5(self._fb, _xout, _yout, _out, self._hx, self._hy, self.noclose)
+            func(self._fb, _xout, _yout, _out, self._ax, self._ay, self._hx, self._hy, self.noclose)
             if copy_made:
                 fout[:] = _out
             return _out.reshape(xout.shape)
@@ -292,21 +291,16 @@ class interp2d(object):
             _xout = np.array([xout],)
             _yout = np.array([yout],)
             _out = np.empty(1)
-            if self.k == 1:
-                _interp2d_k1(self._fb, _xout, _yout, _out, self._hx, self._hy)
-            elif self.k == 3:
-                _interp2d_k3(self._fb, _xout, _yout, _out, self._hx, self._hy, self.noclose)
-            else:
-                _interp2d_k5(self._fb, _xout, _yout, _out, self._hx, self._hy, self.noclose)
+            func(self._fb, _xout, _yout, _out, self._ax, self._ay, self._hx, self._hy, self.noclose)
             return _out[0]
 
 # the actual interpolation routines
 @numba.njit(parallel=True)
-def _interp2d_k1(f, xout, yout, fout, hx, hy):
+def _interp2d_k1(f, xout, yout, fout, ax, ay, hx, hy, noclose):
     m = fout.shape[0]
     for mi in numba.prange(m):
-        xx = xout[mi]
-        yy = yout[mi]
+        xx = xout[mi] - ax
+        yy = yout[mi] - ay
         ix = int(xx//hx)
         iy = int(yy//hy)
         dx = xx - (ix+0.5)*hx
@@ -325,12 +319,12 @@ def _interp2d_k1(f, xout, yout, fout, hx, hy):
                 sp += f[ix+i,iy+j]*asx[i]*asy[j]
         fout[mi] = sp
 @numba.njit(parallel=True)
-def _interp2d_k3(f, xout, yout, fout, hx, hy, noclose):
+def _interp2d_k3(f, xout, yout, fout, ax, ay, hx, hy, noclose):
     ofs = -1 if noclose else 0
     m = fout.shape[0]
     for mi in numba.prange(m):
-        xx = xout[mi]
-        yy = yout[mi]
+        xx = xout[mi] - ax
+        yy = yout[mi] - ay
         ix = int(xx//hx)
         iy = int(yy//hy)
         dx = xx - (ix+0.5)*hx
@@ -355,12 +349,12 @@ def _interp2d_k3(f, xout, yout, fout, hx, hy, noclose):
                 sp += f[ix+i,iy+j]*asx[i]*asy[j]
         fout[mi] = sp
 @numba.njit(parallel=True)
-def _interp2d_k5(f, xout, yout, fout, hx, hy, noclose):
+def _interp2d_k5(f, xout, yout, fout, ax, ay, hx, hy, noclose):
     ofs = -2 if noclose else 0
     m = fout.shape[0]
     for mi in numba.prange(m):
-        xx = xout[mi]
-        yy = yout[mi]
+        xx = xout[mi] - ax
+        yy = yout[mi] - ay
         ix = int(xx//hx)
         iy = int(yy//hy)
         dx = xx - (ix+0.5)*hx
@@ -389,12 +383,14 @@ def _interp2d_k5(f, xout, yout, fout, hx, hy, noclose):
                 sp += f[ix+i,iy+j]*asx[i]*asy[j]
         fout[mi] = sp
 
+INTERP_2D = [None, _interp2d_k1, None, _interp2d_k3, None, _interp2d_k5]
+
 # preparation and extrapolation routines
 def _prepare2d(xv, yv, k, periodic, f, noclose):
     hx = xv[1] - xv[0]
     hy = yv[1] - yv[0]
     fb = f if noclose else _extrapolate2d(f, k, periodic)
-    return hx, hy, fb
+    return xv[0], yv[0], hx, hy, fb
 def _extrapolate2d(f, k, periodic):
     any_periodic = periodic[0] or periodic[1]
     if k == 1 and not any_periodic:
@@ -460,13 +456,14 @@ class interp3d(object):
         self.periodic = periodic
         self.noclose = noclose
         self._dtype = f.dtype
-        self._hx, self._hy, self._hz, self._fb = _prepare3d(xv, yv, zv, k, periodic, f, noclose)
+        self._ax, self._ay, self._az, self._hx, self._hy, self._hz, self._fb = _prepare3d(xv, yv, zv, k, periodic, f, noclose)
     def __call__(self, xout, yout, zout, fout=None):
         """
         Interpolate to xout
         For 1-D interpolation, xout must be a float
             or a ndarray of floats
         """
+        func = INTERP_3D[self.k]
         if isinstance(xout, np.ndarray):
             m = int(np.prod(xout.shape))
             copy_made = False
@@ -479,24 +476,26 @@ class interp3d(object):
             _xout = xout.ravel()
             _yout = yout.ravel()
             _zout = zout.ravel()
-            if self.k == 1:
-                _interp3d_k1(self._fb, _xout, _yout, _zout, _out, self._hx, self._hy, self._hz)
-            elif self.k == 3:
-                _interp3d_k3(self._fb, _xout, _yout, _zout, _out, self._hx, self._hy, self._hz, self.noclose)
-            else:
-                _interp3d_k5(self._fb, _xout, _yout, _zout, _out, self._hx, self._hy, self._hz, self.noclose)
-        if copy_made:
-            fout[:] = _out
-        return _out.reshape(xout.shape)
+            func(self._fb, _xout, _yout, _zout, _out, self._ax, self._ay, self._az, self._hx, self._hy, self._hz, self.noclose)
+            if copy_made:
+                fout[:] = _out
+            return _out.reshape(xout.shape)
+        else:
+            _xout = np.array([xout],)
+            _yout = np.array([yout],)
+            _zout = np.array([zout],)
+            _out = np.empty(1)
+            func(self._fb, _xout, _yout, _zout, _out, self._ax, self._ay, self._az, self._hx, self._hy, self._hz, self.noclose)
+            return _out[0]
 
 # the actual interpolation routines
 @numba.njit(parallel=True)
-def _interp3d_k1(f, xout, yout, zout, fout, hx, hy, hz):
+def _interp3d_k1(f, xout, yout, zout, fout, ax, ay, az, hx, hy, hz, noclose):
     m = fout.shape[0]
     for mi in numba.prange(m):
-        xx = xout[mi]
-        yy = yout[mi]
-        zz = zout[mi]
+        xx = xout[mi] - ax
+        yy = yout[mi] - ay
+        zz = zout[mi] - az
         ix = int(xx//hx)
         iy = int(yy//hy)
         iz = int(zz//hz)
@@ -522,13 +521,13 @@ def _interp3d_k1(f, xout, yout, zout, fout, hx, hy, hz):
                     sp += f[ix+i,iy+j,iz+k]*asx[i]*asy[j]*asz[k]
         fout[mi] = sp
 @numba.njit(parallel=True)
-def _interp3d_k3(f, xout, yout, zout, fout, hx, hy, hz, noclose):
+def _interp3d_k3(f, xout, yout, zout, fout, ax, ay, az, hx, hy, hz, noclose):
     ofs = -1 if noclose else 0
     m = fout.shape[0]
     for mi in numba.prange(m):
-        xx = xout[mi]
-        yy = yout[mi]
-        zz = zout[mi]
+        xx = xout[mi] - ax
+        yy = yout[mi] - ay
+        zz = zout[mi] - az
         ix = int(xx//hx)
         iy = int(yy//hy)
         iz = int(zz//hz)
@@ -563,13 +562,13 @@ def _interp3d_k3(f, xout, yout, zout, fout, hx, hy, hz, noclose):
                     sp += f[ix+i,iy+j,iz+k]*asx[i]*asy[j]*asz[k]
         fout[mi] = sp
 @numba.njit(parallel=True)
-def _interp3d_k5(f, xout, yout, zout, fout, hx, hy, hz, noclose):
-    ofs = -1 if noclose else 0
+def _interp3d_k5(f, xout, yout, zout, fout, ax, ay, az, hx, hy, hz, noclose):
+    ofs = -2 if noclose else 0
     m = fout.shape[0]
     for mi in numba.prange(m):
-        xx = xout[mi]
-        yy = yout[mi]
-        zz = zout[mi]
+        xx = xout[mi] - ax
+        yy = yout[mi] - ay
+        zz = zout[mi] - az
         ix = int(xx//hx)
         iy = int(yy//hy)
         iz = int(zz//hz)
@@ -610,13 +609,15 @@ def _interp3d_k5(f, xout, yout, zout, fout, hx, hy, hz, noclose):
                     sp += f[ix+i,iy+j,iz+k]*asx[i]*asy[j]*asz[k]
         fout[mi] = sp
 
+INTERP_3D = [None, _interp3d_k1, None, _interp3d_k3, None, _interp3d_k5]
+
 # preparation and extrapolation routines
 def _prepare3d(xv, yv, zv, k, periodic, f, noclose):
     hx = xv[1] - xv[0]
     hy = yv[1] - yv[0]
     hz = zv[1] - zv[0]
     fb = f if noclose else _extrapolate3d(f, k, periodic)
-    return hx, hy, hz, fb
+    return xv[0], yv[0], zv[0], hx, hy, hz, fb
 def _extrapolate3d(f, k, periodic):
     any_periodic = periodic[0] or periodic[1] or periodic[2]
     if k == 1 and not any_periodic:
