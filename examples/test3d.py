@@ -24,7 +24,8 @@ for ki, k in enumerate(ktest):
 	for ni, n in enumerate(ntest):
 		print('   ...n =', n)
 
-		v, h = np.linspace(0.1, 1, n, endpoint=True, retstep=True)
+		a, b = 0.1, 1.0
+		v, h = np.linspace(a, b, n, endpoint=True, retstep=True)
 		x, y, z = np.meshgrid(v, v, v, indexing='ij')
 		xo = x[:-1, :-1, :-1].flatten()
 		yo = y[:-1, :-1, :-1].flatten()
@@ -37,7 +38,7 @@ for ki, k in enumerate(ktest):
 		f = test_function(x, y, z)
 		fa = test_function(xo, yo, zo)
 
-		interpolater = interp3d(v, v, v, f, k=k)
+		interpolater = interp3d([a]*3, [b]*3, [h]*3, f, k=k)
 		fe = interpolater(xo, yo, zo)
 		my_errors[ni, ki] = np.abs(fe - fa).max()
 
@@ -78,7 +79,7 @@ test_function = lambda x, y, z: np.exp(x)*np.cos(y)*z**2 + np.sin(z)*x*y**3/(1 +
 f = test_function(x, y, z)
 fa = test_function(xo, yo, zo)
 
-interpolater = interp3d(v, v, v, f, k=5)
+interpolater = interp3d([0]*3, [1]*3, [h]*3, f, k=5)
 fe = interpolater(xo, yo, zo)
 err = np.abs(fe - fa).max()
 print('...Error in interpolating to shaped array: {:0.1e}'.format(err))
@@ -96,7 +97,7 @@ for n in [20, 40, 80, 160]:
 	x, y, z = np.meshgrid(v, v, v, indexing='ij')
 	xo = x[:-1, :-1, :-1].copy()
 	yo = y[:-1, :-1, :-1].copy()
-	zo = z[:-1, :-1, :-1].copy()
+	zo = 2*z[:-1, :-1, :-1].copy()
 	xo += np.random.rand(*xo.shape)*h
 	yo += np.random.rand(*yo.shape)*h
 	zo += np.random.rand(*zo.shape)*h
@@ -105,7 +106,7 @@ for n in [20, 40, 80, 160]:
 	f = test_function(x, y, z)
 	fa = test_function(xo, yo, zo)
 
-	interpolater = interp3d(v, v, v, f, k=5, periodic=[True,True,True])
+	interpolater = interp3d([0]*3, [2*np.pi]*3, [h]*3, f, k=5, p=[True]*3)
 	fe = interpolater(xo, yo, zo)
 	err = np.abs(fe - fa).max()
 	print('...Error is: {:0.1e}'.format(err))
@@ -131,7 +132,7 @@ for n in [20, 40, 80, 160]:
 	f = test_function(x, y, z)
 	fa = test_function(xo, yo, zo)
 
-	interpolater = interp3d(xv, yv, zv, f, k=1, periodic=[True,False,False])
+	interpolater = interp3d([0]*3, [2*np.pi,1,1], [xh,yh,zh], f, k=1, p=[True,False,False])
 	fe = interpolater(xo, yo, zo)
 	err = np.abs(fe - fa).max()
 	print('...Error is: {:0.1e}'.format(err))
@@ -157,7 +158,7 @@ for n in [20, 40, 80, 160]:
 	f = test_function(x, y, z)
 	fa = test_function(xo, yo, zo)
 
-	interpolater = interp3d(xv, yv, zv, f, k=3, periodic=[True,False,True])
+	interpolater = interp3d([0]*3, [2*np.pi,1,2*np.pi], [xh,yh,zh], f, k=3, p=[True,False,True])
 	fe = interpolater(xo, yo, zo)
 	err = np.abs(fe - fa).max()
 	print('...Error is: {:0.1e}'.format(err))
@@ -167,6 +168,7 @@ for n in [20, 40, 80, 160]:
 print('\n----- Single point on large grid far from edges -----')
 
 del interpolater
+gc.collect()
 gc.disable()
 
 n = 500
@@ -184,7 +186,7 @@ f = test_function(x, y, z)
 fa = test_function(xo, yo, zo)
 
 st = time.time()
-interpolater = interp3d(xv, yv, zv, f, k=5, periodic=[False,True,True], noclose=True)
+interpolater = interp3d([0]*3, [1,2*np.pi,2*np.pi], [xh,yh,zh], f, k=5, p=[False,True,True], c=[False]*3)
 fe = interpolater(xo, yo, zo)
 et = time.time()
 err = np.abs(fe - fa).max()

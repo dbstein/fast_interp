@@ -14,7 +14,7 @@ import gc
 
 print('\n----- Testing Error and Timings vs. Scipy -----')
 
-ntest = 10*2**np.arange(9)
+ntest = 10*2**np.arange(8)
 ktest = [1, 3, 5]
 my_errors = np.zeros([ntest.shape[0], 3], dtype=float)
 sp_errors = np.zeros([ntest.shape[0], 3], dtype=float)
@@ -30,7 +30,8 @@ for ki, k in enumerate(ktest):
 	for ni, n in enumerate(ntest):
 		print('   ...n =', n)
 
-		v, h = np.linspace(0.5, 1, n, endpoint=True, retstep=True)
+		a = 1/np.e
+		v, h = np.linspace(a, 1, n, endpoint=True, retstep=True)
 		x, y = np.meshgrid(v, v, indexing='ij')
 		xo = x[:-1, :-1].flatten()
 		yo = y[:-1, :-1].flatten()
@@ -42,14 +43,14 @@ for ki, k in enumerate(ktest):
 		fa = test_function(xo, yo)
 
 		# run once to compile numba functions
-		interpolater = interp2d(v, v, f, k=k)
+		interpolater = interp2d([a,a], [1.0,1.0], [h,h], f, k=k)
 		fe = interpolater(xo, yo)
 		del interpolater
 		gc.collect()
 
 		# fast_interp
 		st = time.time()
-		interpolater = interp2d(v, v, f, k=k)
+		interpolater = interp2d([a,a], [1.0,1.0], [h,h], f, k=k)
 		my_setup_time[ni, ki] = (time.time()-st)*1000
 		st = time.time()
 		fe = interpolater(xo, yo)
@@ -143,7 +144,7 @@ test_function = lambda x, y: np.exp(x)*np.cos(y) + x*y**3/(1 + x + y)
 f = test_function(x, y)
 fa = test_function(xo, yo)
 
-interpolater = interp2d(v, v, f, k=5)
+interpolater = interp2d([0.0,0.0], [1.0,1.0], [h,h], f, k=5)
 fe = interpolater(xo, yo)
 err = np.abs(fe - fa).max()
 print('...Error in interpolating to shaped array: {:0.1e}'.format(err))
@@ -155,18 +156,18 @@ print('\n----- Testing Periodic Qunitic Interpolation, both directions -----')
 
 for n in [20, 40, 80, 160]:
 	print('...for n =', n)
-	v, h = np.linspace(0, 2*np.pi, n, endpoint=False, retstep=True)
+	a = 0.0
+	b = 2*np.pi
+	v, h = np.linspace(a, b, n, endpoint=False, retstep=True)
 	x, y = np.meshgrid(v, v, indexing='ij')
-	xo = x[:-1, :-1].copy()
-	yo = y[:-1, :-1].copy()
-	xo += np.random.rand(*xo.shape)*h
-	yo += np.random.rand(*yo.shape)*h
+	xo = np.random.rand(*x.shape)*10
+	yo = np.random.rand(*x.shape)*10
 
 	test_function = lambda x, y: np.exp(np.sin(x))*np.cos(y)
 	f = test_function(x, y)
 	fa = test_function(xo, yo)
 
-	interpolater = interp2d(v, v, f, k=5, periodic=[True,True])
+	interpolater = interp2d([a,a], [b,b], [h,h], f, k=5, p=[True,True])
 	fe = interpolater(xo, yo)
 	err = np.abs(fe - fa).max()
 	print('...Error is: {:0.1e}'.format(err))
@@ -175,8 +176,10 @@ print('\n----- Testing Periodic Linear Interpolation, x-direction -----')
 
 for n in [20, 40, 80, 160]:
 	print('...for n =', n)
-	xv, xh = np.linspace(0, 2*np.pi, n, endpoint=False, retstep=True)
-	yv, yh = np.linspace(0, 1, n, endpoint=True, retstep=True)
+	ax, bx = 0.0, 2*np.pi
+	ay, by = 0.0, 1.0
+	xv, xh = np.linspace(ax, bx, n, endpoint=False, retstep=True)
+	yv, yh = np.linspace(ay, by, n, endpoint=True, retstep=True)
 	x, y = np.meshgrid(xv, yv, indexing='ij')
 	xo = x[:-1, :-1].copy()
 	yo = y[:-1, :-1].copy()
@@ -187,7 +190,7 @@ for n in [20, 40, 80, 160]:
 	f = test_function(x, y)
 	fa = test_function(xo, yo)
 
-	interpolater = interp2d(xv, yv, f, k=1, periodic=[True,False])
+	interpolater = interp2d([ax,ay], [bx,by], [xh,yh], f, k=1, p=[True,False])
 	fe = interpolater(xo, yo)
 	err = np.abs(fe - fa).max()
 	print('...Error is: {:0.1e}'.format(err))
@@ -196,11 +199,13 @@ print('\n----- Testing Periodic Cubic Interpolation, y-direction -----')
 
 for n in [20, 40, 80, 160]:
 	print('...for n =', n)
-	xv, xh = np.linspace(0, 1, n, endpoint=True, retstep=True)
-	yv, yh = np.linspace(0, 2*np.pi, n, endpoint=False, retstep=True)
+	ax, bx = 0.0, 1.0
+	ay, by = 0.0, 2*np.pi
+	xv, xh = np.linspace(ax, bx, n,   endpoint=True, retstep=True)
+	yv, yh = np.linspace(ay, by, 2*n, endpoint=False, retstep=True)
 	x, y = np.meshgrid(xv, yv, indexing='ij')
 	xo = x[:-1, :-1].copy()
-	yo = y[:-1, :-1].copy()
+	yo = 2*y[:-1, :-1].copy()
 	xo += np.random.rand(*xo.shape)*xh
 	yo += np.random.rand(*yo.shape)*yh
 
@@ -208,34 +213,8 @@ for n in [20, 40, 80, 160]:
 	f = test_function(x, y)
 	fa = test_function(xo, yo)
 
-	interpolater = interp2d(xv, yv, f, k=3, periodic=[False,True])
+	interpolater = interp2d([ax,ay], [bx,by], [xh,yh], f, k=3, p=[False,True])
 	fe = interpolater(xo, yo)
 	err = np.abs(fe - fa).max()
 	print('...Error is: {:0.1e}'.format(err))
 
-print('\n----- Single point on large grid far from edges -----')
-
-del interpolater
-gc.disable()
-
-n = 10000
-print('...for n =', n)
-xv, xh = np.linspace(0, 1, n, endpoint=True, retstep=True)
-yv, yh = np.linspace(0, 2*np.pi, n, endpoint=False, retstep=True)
-x, y = np.meshgrid(xv, yv, indexing='ij')
-xo = 0.5
-yo = 0.4
-
-test_function = lambda x, y: np.exp(x)*np.exp(np.sin(y))
-f = test_function(x, y)
-fa = test_function(xo, yo)
-
-st = time.time()
-interpolater = interp2d(xv, yv, f, k=5, periodic=[False,True], noclose=True)
-fe = interpolater(xo, yo)
-et = time.time()
-err = np.abs(fe - fa).max()
-print('Time to setup and interpolate (ms): {:0.1f}'.format((et - st)*1000))
-print('...Error is:                        {:0.1e}'.format(err))
-
-gc.collect()

@@ -29,7 +29,10 @@ for ki, k in enumerate(ktest):
 	for ni, n in enumerate(ntest):
 		print('   ...n =', n)
 
-		x, h = np.linspace(0.5, 1.0, n, endpoint=True, retstep=True)
+		a = 0.5
+		b = 1.0
+
+		x, h = np.linspace(a, b, n, endpoint=True, retstep=True)
 		test_x = (x + np.random.rand(*x.shape)*h)[:-1]
 
 		def test_function(x):
@@ -39,11 +42,11 @@ for ki, k in enumerate(ktest):
 		fa = test_function(test_x)
 
 		# run once to compile numba functions
-		interpolater = interp1d(x, f, k=k)
+		interpolater = interp1d(a, b, h, f, k=k)
 		fe = interpolater(test_x)
 		# fast_interp
 		st = time.time()
-		interpolater = interp1d(x, f, k=k)
+		interpolater = interp1d(a, b, h, f, k=k)
 		my_setup_time[ni, ki] = (time.time()-st)*1000
 		st = time.time()
 		fe = interpolater(test_x)
@@ -129,7 +132,7 @@ def test_function(x):
 f = test_function(x)
 fa = test_function(test_x)
 
-interpolater = interp1d(x, f, k=5)
+interpolater = interp1d(0, 1, h, f, k=5)
 fe = interpolater(test_x)
 err = np.abs(fe - fa).max()
 print('...Error in interpolating to shaped array: {:0.1e}'.format(err))
@@ -141,22 +144,84 @@ gc.collect()
 
 print('\n----- Testing Periodic Interpolation -----')
 
-for n in [20, 40, 80, 160]:
-	print('...for n =', n)
-	x, h = np.linspace(0, 1, n, endpoint=False, retstep=True)
-	test_x = (x + np.random.rand(*x.shape)*h)[:-1]
+ntest = 20*2**np.arange(0, 15)
 
-	def test_function(x):
-	    return np.exp(np.sin(2*np.pi*x))
+for k in [1, 3, 5]:
+	print('--- k =', k)
+	for n in ntest:
+		x, h = np.linspace(0.5, 1.5, n, endpoint=False, retstep=True)
+		test_x = np.linspace(-10, 10, n)
 
-	f = test_function(x)
-	fa = test_function(test_x)
+		def test_function(x):
+		    return np.exp(np.sin(2*np.pi*x))
 
-	interpolater = interp1d(x, f, k=5, periodic=True)
-	fe = interpolater(test_x)
-	err = np.abs(fe - fa).max()
-	print('...Error is: {:0.1e}'.format(err))
+		f = test_function(x)
+		fa = test_function(test_x)
 
-	gc.collect()
+		interpolater = interp1d(0.5, 1.5, h, f, k=k, p=True)
+		fe = interpolater(test_x)
+		err = np.abs(fe - fa).max()
+		print('...Error for n =', str(n).ljust(8), 'is: {:0.1e}'.format(err))
 
+		gc.collect()
 
+################################################################################
+# Test with extrapolation
+
+print('\n----- Testing Extrapolation -----')
+
+ntest = 50*2**np.arange(0, 5)
+
+for k in [1, 3, 5]:
+	print('--- k =', k, '---')
+	for n in ntest:
+		print('...Error for n =', n)
+		x, h = np.linspace(0.5, 1.5, n, endpoint=True, retstep=True)
+		test_x_low  = x[0]  - 0.95*h*np.arange(1,6)
+		test_x_high = x[-1] + 0.95*h*np.arange(1,6)
+
+		def test_function(x):
+		    return np.exp(np.sin(2*np.pi*x))
+
+		f = test_function(x)
+		fal = test_function(test_x_low)
+		fah = test_function(test_x_high)
+
+		interpolater = interp1d(x[0], x[-1], h, f, k=k, e=5)
+		fel = interpolater(test_x_low)
+		feh = interpolater(test_x_high)
+		for i in range(5):
+			err = max(np.abs(fel[i] - fal[i]), np.abs(feh[i] - fah[i]))
+			print('...... ~', i+1, 'h from boundary is: {:0.1e}'.format(err))
+
+		gc.collect()
+
+################################################################################
+# Test out of bounds behavior
+
+print('\n----- Testing Out of bounds behavior -----')
+
+x, h = np.linspace(0.5, 1.5, 100, endpoint=True, retstep=True)
+test_x = np.linspace(0.0, 2.0, 10000)
+
+def test_function(x):
+    return np.exp(np.sin(2*np.pi*x))
+
+f = test_function(x)
+
+interpolater = interp1d(x[0], x[-1], h, f, k=k, e=5)
+fe = interpolater(test_x)
+fa = test_function(test_x)
+
+fig, ax = plt.subplots(1,1)
+ax.plot(test_x, fe, color='black')
+ax.plot(test_x, fa, color='blue')
+ax.axvline(0.5, color='gray')
+ax.axvline(1.5, color='gray')
+ax.axvline(0.5-5*h, color='gray')
+ax.axvline(1.5+5*h, color='gray')
+ax.set_xlabel(r'$x$')
+ax.set_xlabel(r'$y$')
+ax.set_title('Out of bounds performance...')
+
+gc.collect()

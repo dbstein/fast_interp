@@ -4,125 +4,98 @@ import numba
 ################################################################################
 # 1D Extrapolation Routines
 
-def _extrapolate1d_x(fb, k, periodic):
-    if periodic:
-        __extrapolate1d_x_periodic(fb, k)
-    else:
-        __extrapolate1d_x(fb, k)
-def _extrapolate1d_y(fb, k, periodic):
-    if periodic:
-        __extrapolate1d_y_periodic(fb, k)
-    else:
-        __extrapolate1d_y(fb, k)
-def __extrapolate1d_x(fb, k):
-    if k == 3:
-        fb[ 0] = 4*fb[ 1] - 6*fb[ 2] + 4*fb[ 3] - fb[ 4]
-        fb[-1] = 4*fb[-2] - 6*fb[-3] + 4*fb[-4] - fb[-5]
-    if k == 5:
-        fb[ 0] = 21*fb[ 2] - 70*fb[ 3] + 105*fb[ 4] - 84*fb[ 5] + 35*fb[ 6] - 6*fb[ 7]
-        fb[ 1] =  6*fb[ 2] - 15*fb[ 3] +  20*fb[ 4] - 15*fb[ 5] +  6*fb[ 6] -   fb[ 7]
-        fb[-2] =  6*fb[-3] - 15*fb[-4] +  20*fb[-5] - 15*fb[-6] +  6*fb[-7] -   fb[-8]
-        fb[-1] = 21*fb[-3] - 70*fb[-4] + 105*fb[-5] - 84*fb[-6] + 35*fb[-7] - 6*fb[-8]
-def __extrapolate1d_y(fb, k):
-    if k == 3:
-        fb[:, 0] = 4*fb[:, 1] - 6*fb[:, 2] + 4*fb[:, 3] - fb[:, 4]
-        fb[:,-1] = 4*fb[:,-2] - 6*fb[:,-3] + 4*fb[:,-4] - fb[:,-5]
-    if k == 5:
-        fb[:, 0] = 21*fb[:, 2] - 70*fb[:, 3] + 105*fb[:, 4] - 84*fb[:, 5] + 35*fb[:, 6] - 6*fb[:, 7]
-        fb[:, 1] =  6*fb[:, 2] - 15*fb[:, 3] +  20*fb[:, 4] - 15*fb[:, 5] +  6*fb[:, 6] -   fb[:, 7]
-        fb[:,-2] =  6*fb[:,-3] - 15*fb[:,-4] +  20*fb[:,-5] - 15*fb[:,-6] +  6*fb[:,-7] -   fb[:,-8]
-        fb[:,-1] = 21*fb[:,-3] - 70*fb[:,-4] + 105*fb[:,-5] - 84*fb[:,-6] + 35*fb[:,-7] - 6*fb[:,-8]
-def __extrapolate1d_x_periodic(fb, k):
-    if k == 1:
-        fb[-1] = fb[ 0]
-    if k == 3:
-        fb[ 0] = fb[-3]
-        fb[-2] = fb[ 1]
-        fb[-1] = fb[ 2]
-    if k == 5:
-        fb[ 0] = fb[-5]
-        fb[ 1] = fb[-4]
-        fb[-3] = fb[ 2]
-        fb[-2] = fb[ 3]
-        fb[-1] = fb[ 4]
-def __extrapolate1d_y_periodic(fb, k):
-    if k == 1:
-        fb[:,-1] = fb[:, 0]
-    if k == 3:
-        fb[:, 0] = fb[:,-3]
-        fb[:,-2] = fb[:, 1]
-        fb[:,-1] = fb[:, 2]
-    if k == 5:
-        fb[:, 0] = fb[:,-5]
-        fb[:, 1] = fb[:,-4]
-        fb[:,-3] = fb[:, 2]
-        fb[:,-2] = fb[:, 3]
-        fb[:,-1] = fb[:, 4]
-def _extrapolate1d_z(fb, k, periodic):
-    if periodic:
-        __extrapolate1d_z_periodic(fb, k)
-    else:
-        __extrapolate1d_z(fb, k)
-def __extrapolate1d_z(fb, k):
-    if k == 3:
-        fb[:,:, 0] = 4*fb[:,:, 1] - 6*fb[:,:, 2] + 4*fb[:,:, 3] - fb[:,:, 4]
-        fb[:,:,-1] = 4*fb[:,:,-2] - 6*fb[:,:,-3] + 4*fb[:,:,-4] - fb[:,:,-5]
-    if k == 5:
-        fb[:,:, 0] = 21*fb[:,:, 2] - 70*fb[:,:, 3] + 105*fb[:,:, 4] - 84*fb[:,:, 5] + 35*fb[:,:, 6] - 6*fb[:,:, 7]
-        fb[:,:, 1] =  6*fb[:,:, 2] - 15*fb[:,:, 3] +  20*fb[:,:, 4] - 15*fb[:,:, 5] +  6*fb[:,:, 6] -   fb[:,:, 7]
-        fb[:,:,-2] =  6*fb[:,:,-3] - 15*fb[:,:,-4] +  20*fb[:,:,-5] - 15*fb[:,:,-6] +  6*fb[:,:,-7] -   fb[:,:,-8]
-        fb[:,:,-1] = 21*fb[:,:,-3] - 70*fb[:,:,-4] + 105*fb[:,:,-5] - 84*fb[:,:,-6] + 35*fb[:,:,-7] - 6*fb[:,:,-8]
-def __extrapolate1d_z_periodic(fb, k):
-    if k == 1:
-        fb[:,:,-1] = fb[:,:, 0]
-    if k == 3:
-        fb[:,:, 0] = fb[:,:,-3]
-        fb[:,:,-2] = fb[:,:, 1]
-        fb[:,:,-1] = fb[:,:, 2]
-    if k == 5:
-        fb[:,:, 0] = fb[:,:,-5]
-        fb[:,:, 1] = fb[:,:,-4]
-        fb[:,:,-3] = fb[:,:, 2]
-        fb[:,:,-2] = fb[:,:, 3]
-        fb[:,:,-1] = fb[:,:, 4]
+def _extrapolate1d_x(f, k, o):
+    for ix in range(o):
+        il = o-ix-1
+        ih = f.shape[0]-(o-ix)
+        if k == 1:
+            f[il] = 2*f[il+1] - 1*f[il+2]
+            f[ih] = 2*f[ih-1] - 1*f[ih-2]
+        if k == 3:
+            f[il] = 4*f[il+1] - 6*f[il+2] + 4*f[il+3] - f[il+4]
+            f[ih] = 4*f[ih-1] - 6*f[ih-2] + 4*f[ih-3] - f[ih-4]
+        if k == 5:
+            f[il] = 6*f[il+1]-15*f[il+2]+20*f[il+3]-15*f[il+4]+6*f[il+5]-f[il+6]
+            f[ih] = 6*f[ih-1]-15*f[ih-2]+20*f[ih-3]-15*f[ih-4]+6*f[ih-5]-f[ih-6]
+def _extrapolate1d_y(f, k, o):
+    for ix in range(o):
+        il = o-ix-1
+        ih = f.shape[1]-(o-ix)
+        if k == 1:
+            f[:,il] = 2*f[:,il+1] - 1*f[:,il+2]
+            f[:,ih] = 2*f[:,ih-1] - 1*f[:,ih-2]
+        if k == 3:
+            f[:,il] = 4*f[:,il+1] - 6*f[:,il+2] + 4*f[:,il+3] - f[:,il+4]
+            f[:,ih] = 4*f[:,ih-1] - 6*f[:,ih-2] + 4*f[:,ih-3] - f[:,ih-4]
+        if k == 5:
+            f[:,il] = 6*f[:,il+1]-15*f[:,il+2]+20*f[:,il+3]-15*f[:,il+4]+6*f[:,il+5]-f[:,il+6]
+            f[:,ih] = 6*f[:,ih-1]-15*f[:,ih-2]+20*f[:,ih-3]-15*f[:,ih-4]+6*f[:,ih-5]-f[:,ih-6]
+def _extrapolate1d_z(f, k, o):
+    for ix in range(o):
+        il = o-ix-1
+        ih = f.shape[1]-(o-ix)
+        if k == 1:
+            f[:,:,il] = 2*f[:,:,il+1] - 1*f[:,:,il+2]
+            f[:,:,ih] = 2*f[:,:,ih-1] - 1*f[:,:,ih-2]
+        if k == 3:
+            f[:,:,il] = 4*f[:,:,il+1] - 6*f[:,:,il+2] + 4*f[:,:,il+3] - f[:,:,il+4]
+            f[:,:,ih] = 4*f[:,:,ih-1] - 6*f[:,:,ih-2] + 4*f[:,:,ih-3] - f[:,:,ih-4]
+        if k == 5:
+            f[:,:,il] = 6*f[:,:,il+1]-15*f[:,:,il+2]+20*f[:,:,il+3]-15*f[:,:,il+4]+6*f[:,:,il+5]-f[:,:,il+6]
+            f[:,:,ih] = 6*f[:,:,ih-1]-15*f[:,:,ih-2]+20*f[:,:,ih-3]-15*f[:,:,ih-4]+6*f[:,:,ih-5]-f[:,:,ih-6]
 
 ################################################################################
 # One dimensional routines
 
 class interp1d(object):
-    def __init__(self, xv, f, k=3, periodic=False, noclose=False):
+    def __init__(self, a, b, h, f, k=3, p=False, c=True, e=0):
         """
-        xv are the equispaced data nodes
-        f is the data, sampled at xv
-        k is the order of the local taylor expansions (int)
-            k gives interp accuracy of order k+1
-            only 1, 3, 5, supported
-        periodic gives whether the dimension is taken to be periodic
-            if it is taken to be periodic, it is assumed that the last index
-            is skipped, and is equal to the first index; that is, the interp
-            range is taken to be:
-                xv[0] --> xv[-1] + xh
-            no checking as to whether values live in this region is done
-            at least for now...
-        noclose=True tells the algorithm that padding does not need to be done
-            because there are no points close to the boundaries
-            for non-periodic:
-                linear  (doesn't matter)
-                cubic   (within h of domain boundaries)
-                qunitic (within 2h of domain boundaries)
-            for periodic:
-                linear   (lower: doesn't matter, upper: within h)
-                cubic    (lower: within h,       upper: within 2h)
-                quintic  (lower: within 2h,      upper: within 3h)
+        a, b: the lower and upper bounds of the interpolation region
+        h:    the grid-spacing at which f is given
+        f:    data to be interpolated
+        k:    order of local taylor expansions (int, 1, 3, or 5)
+        p:    whether the dimension is taken to be periodic
+        c:    whether the array should be padded to allow accurate close eval
+        e:    extrapolation distance, how far to allow extrap, in units of h
+        if p is True, then f is assumed to given on:
+            [a, b)
+        if p is False, f is assumed to be given on:
+            [a, b]
+        For periodic interpolation (p = True)
+            this will interpolate accurately for any x
+            c is ignored
+            e is ignored
+        For non-periodic interpolation (p = False)
+            if c is True the function is padded to allow accurate eval on:
+                [a-e*h, b+e*h]
+                (extrapolation is done on [a-e*h, a] and [b, b+e*h], be careful!)
+            if c is False, the function evaluates accurately on:
+                [a,    b   ] for k = 1
+                [a+h,  b-h ] for k = 3
+                [a+2h, b-2h] for k = 5
+                e is ignored
+            c = True requires the allocation of a padded data array, as well
+                as a memory copy from f to the padded array and some
+                time computing function extrapolations, this setup time is
+                quite small and fine when interpolating to many points but
+                is significant when interpolating to only a few points
+            right now there is no bounds checking; this will probably segfault
+            if you provide values outside of the safe interpolation region...
         """
         if k not in [1, 3, 5]:
             raise Exception('k must be 1, 3, or 5')
+        self.a = a
+        self.b = b
+        self.h = h
         self.f = f
         self.k = k
-        self.periodic = periodic
-        self.noclose = noclose
-        self._dtype = f.dtype
-        self._ax, self._hx, self._fb = _prepare1d(xv, k, periodic, f, noclose)
+        self.p = p
+        self.c = c
+        self.e = e
+        self.n = f.shape[0]
+        self.dtype = f.dtype
+        self._f, self._o = _extrapolate1d(f, k, p, c, e)
+        self.lb, self.ub = _compute_bounds1(a, b, h, p, c, e, k)
     def __call__(self, xout, fout=None):
         """
         Interpolate to xout
@@ -133,66 +106,65 @@ class interp1d(object):
             m = int(np.prod(xout.shape))
             copy_made = False
             if fout is None:
-                _out = np.empty(m, dtype=self._dtype)
+                _out = np.empty(m, dtype=self.dtype)
             else:
                 _out = fout.ravel()
                 if _out.base is None:
                     copy_made = True
             _xout = xout.ravel()
-            func(self._fb, _xout, _out, self._ax, self._hx, self.noclose)
+            func(self._f, _xout, _out, self.a, self.h, self.n, self.p, self._o, self.lb, self.ub)
             if copy_made:
                 fout[:] = _out
             return _out.reshape(xout.shape)
         else:
             _xout = np.array([xout],)
             _out = np.empty(1)
-            func(self._fb, _xout, _out, self._ax, self._hx, self.noclose)
+            func(self._f, _xout, _out, self.a, self.h, self.n, self.p, self._o, self.lb, self.ub)
             return _out[0]
 
-# the actual interpolation routines
+# interpolation routines
 @numba.njit(parallel=True)
-def _interp1d_k1(f, xout, fout, ax, hx, noclose):
+def _interp1d_k1(f, xout, fout, a, h, n, p, o, lb, ub):
     m = fout.shape[0]
     for mi in numba.prange(m):
-        xx = xout[mi] - ax
-        ix = int(xx//hx)
-        dx = xx - (ix+0.5)*hx
-        ratx = dx/hx
+        xr = min(max(xout[mi], lb), ub)
+        xx = xr - a
+        ix = int(xx//h)
+        ratx = xx/h - (ix+0.5)
         asx = np.empty(2)
         asx[0] = 0.5 - ratx
         asx[1] = 0.5 + ratx
-        sp = 0.0
+        ix += o
+        fout[mi] = 0.0
         for i in range(2):
-            sp += f[ix+i]*asx[i]
-        fout[mi] = sp
+            ixi = (ix + i) % n if p else ix + i
+            fout[mi] += f[ixi]*asx[i]
 @numba.njit(parallel=True)
-def _interp1d_k3(f, xout, fout, ax, hx, noclose):
-    ofs = -1 if noclose else 0
+def _interp1d_k3(f, xout, fout, a, h, n, p, o, lb, ub):
     m = fout.shape[0]
     for mi in numba.prange(m):
-        xx = xout[mi] - ax
-        ix = int(xx//hx)
-        dx = xx - (ix+0.5)*hx
-        ratx = dx/hx
+        xr = min(max(xout[mi], lb), ub)
+        xx = xr - a
+        ix = int(xx//h)
+        ratx = xx/h - (ix+0.5)
         asx = np.empty(4)
         asx[0] = -1/16 + ratx*( 1/24 + ratx*( 1/4 - ratx/6))
         asx[1] =  9/16 + ratx*( -9/8 + ratx*(-1/4 + ratx/2))
         asx[2] =  9/16 + ratx*(  9/8 + ratx*(-1/4 - ratx/2))
         asx[3] = -1/16 + ratx*(-1/24 + ratx*( 1/4 + ratx/6))
-        ix += ofs
-        sp = 0.0
+        ix += o-1
+        fout[mi] = 0.0
         for i in range(4):
-            sp += f[ix+i]*asx[i]
-        fout[mi] = sp
+            ixi = (ix + i) % n if p else ix + i
+            fout[mi] += f[ixi]*asx[i]
 @numba.njit(parallel=True)
-def _interp1d_k5(f, xout, fout, ax, hx, noclose):
-    ofs = -2 if noclose else 0
+def _interp1d_k5(f, xout, fout, a, h, n, p, o, lb, ub):
     m = fout.shape[0]
     for mi in numba.prange(m):
-        xx = xout[mi] - ax
-        ix = int(xx//hx)
-        dx = xx - (ix+0.5)*hx
-        ratx = dx/hx
+        xr = min(max(xout[mi], lb), ub)
+        xx = xr - a
+        ix = int(xx//h)
+        ratx = xx/h - (ix+0.5)
         asx = np.empty(6)
         asx[0] =   3/256 + ratx*(   -9/1920 + ratx*( -5/48/2 + ratx*(  1/8/6 + ratx*( 1/2/24 -  1/8/120*ratx))))
         asx[1] = -25/256 + ratx*(  125/1920 + ratx*( 39/48/2 + ratx*(-13/8/6 + ratx*(-3/2/24 +  5/8/120*ratx))))
@@ -200,71 +172,65 @@ def _interp1d_k5(f, xout, fout, ax, hx, noclose):
         asx[3] = 150/256 + ratx*( 2250/1920 + ratx*(-34/48/2 + ratx*(-34/8/6 + ratx*( 2/2/24 + 10/8/120*ratx))))
         asx[4] = -25/256 + ratx*( -125/1920 + ratx*( 39/48/2 + ratx*( 13/8/6 + ratx*(-3/2/24 -  5/8/120*ratx))))
         asx[5] =   3/256 + ratx*(    9/1920 + ratx*( -5/48/2 + ratx*( -1/8/6 + ratx*( 1/2/24 +  1/8/120*ratx))))
-        ix += ofs
-        sp = 0.0
+        ix += o-2
+        fout[mi] = 0.0
         for i in range(6):
-            sp += f[ix+i]*asx[i]
-        fout[mi] = sp
+            ixi = (ix + i) % n if p else ix + i
+            fout[mi] += f[ixi]*asx[i]
 
 INTERP_1D = [None, _interp1d_k1, None, _interp1d_k3, None, _interp1d_k5]
 
-# preparation and extrapolation routines
-def _prepare1d(xv, k, periodic, f, noclose):
-    hx = xv[1] - xv[0]
-    fb = f if noclose else _extrapolate1d(f, k, periodic)
-    return xv[0], hx, fb
-def _extrapolate1d(f, k, periodic):
-    if k == 1 and not periodic:
-        return f
+# extrapolation routines
+def _extrapolate1d(f, k, p, c, e):
+    pad = (not p) and c
+    if pad:
+        o = (k//2)+e
+        fb = np.empty(f.shape[0]+2*o, dtype=f.dtype)
+        _fill1(f, fb, o)
+        _extrapolate1d_x(fb, k, o)
+        return fb, o
     else:
-        return _extrapolate1d_periodic(f, k, periodic)
-def _extrapolate1d_periodic(f, k, periodic):
-    offset = k//2
-    fb = np.zeros(f.shape[0] + 2*offset + int(periodic), dtype=f.dtype)
-    _fill1(f, fb, offset)
-    _extrapolate1d_x(fb, k, periodic)
+        return f, 0
     return fb
-def _fill1(f, fb, offset):
-    nx = f.shape[0]
-    fb[offset:offset+nx] = f
+def _fill1(f, fb, o):
+    fb[o:o+f.shape[0]] = f
+def _compute_bounds1(a, b, h, p, c, e, k):
+    if p:
+        return -1e100, 1e100
+    elif not c:
+        d = h*(k//2)
+        return a+d, b-d
+    else:
+        d = e*h
+        return a-d, b+d
 
 ################################################################################
 # Two dimensional routines
 
 class interp2d(object):
-    def __init__(self, xv, yv, f, k=3, periodic=[False, False], noclose=False):
+    def __init__(self, a, b, h, f, k=3, p=[False]*2, c=[True]*2, e=[0]*2):
         """
-        xv, yv are the equispaced data nodes
-        f is the data, sampled at meshgrid(xv, yv)
-        k is the order of the local taylor expansions (int)
-            k gives interp accuracy of order k+1
-            only 1, 3, 5, supported
-        periodic gives whether the dimension is taken to be periodic
-            if it is taken to be periodic, it is assumed that the last index
-            is skipped, and is equal to the first index; that is, the interp
-            range is taken to be:
-                xv[0] --> xv[-1] + xh
-            no checking as to whether values live in this region is done
-            at least for now...
-        noclose=True tells the algorithm that padding does not need to be done
-            because there are no points close to the boundaries
-            for non-periodic dims:
-                linear  (doesn't matter)
-                cubic   (within h of domain boundaries)
-                qunitic (within 2h of domain boundaries)
-            for periodic dims:
-                linear   (lower: doesn't matter, upper: within h)
-                cubic    (lower: within h,       upper: within 2h)
-                quintic  (lower: within 2h,      upper: within 3h)
+        See the documentation for interp1d
+        this function is the same, except that a, b, h, p, c, and e
+        should be lists or tuples of length 2 giving the values for each
+        dimension
+        the function behaves as in the 1d case, except that of course padding
+        is required if padding is requested in any dimension
         """
         if k not in [1, 3, 5]:
             raise Exception('k must be 1, 3, or 5')
+        self.a = a
+        self.b = b
+        self.h = h
         self.f = f
         self.k = k
-        self.periodic = periodic
-        self.noclose = noclose
-        self._dtype = f.dtype
-        self._ax, self._ay, self._hx, self._hy, self._fb = _prepare2d(xv, yv, k, periodic, f, noclose)
+        self.p = p
+        self.c = c
+        self.e = e
+        self.n = list(f.shape)
+        self.dtype = f.dtype
+        self._f, self._o = _extrapolate2d(f, k, p, c, e)
+        self.lb, self.ub = _compute_bounds(a, b, h, p, c, e, k)
     def __call__(self, xout, yout, fout=None):
         """
         Interpolate to xout
@@ -276,14 +242,14 @@ class interp2d(object):
             m = int(np.prod(xout.shape))
             copy_made = False
             if fout is None:
-                _out = np.empty(m, dtype=self._dtype)
+                _out = np.empty(m, dtype=self.dtype)
             else:
                 _out = fout.ravel()
                 if _out.base is None:
                     copy_made = True
             _xout = xout.ravel()
             _yout = yout.ravel()
-            func(self._fb, _xout, _yout, _out, self._ax, self._ay, self._hx, self._hy, self.noclose)
+            func(self._f, _xout, _yout, _out, self.a, self.h, self.n, self.p, self._o, self.lb, self.ub)
             if copy_made:
                 fout[:] = _out
             return _out.reshape(xout.shape)
@@ -291,46 +257,48 @@ class interp2d(object):
             _xout = np.array([xout],)
             _yout = np.array([yout],)
             _out = np.empty(1)
-            func(self._fb, _xout, _yout, _out, self._ax, self._ay, self._hx, self._hy, self.noclose)
+            func(self._f, _xout, _yout, _out, self.a, self.h, self.n, self.p, self._o, self.lb, self.ub)
             return _out[0]
 
-# the actual interpolation routines
+# interpolation routines
 @numba.njit(parallel=True)
-def _interp2d_k1(f, xout, yout, fout, ax, ay, hx, hy, noclose):
+def _interp2d_k1(f, xout, yout, fout, a, h, n, p, o, lb, ub):
     m = fout.shape[0]
     for mi in numba.prange(m):
-        xx = xout[mi] - ax
-        yy = yout[mi] - ay
-        ix = int(xx//hx)
-        iy = int(yy//hy)
-        dx = xx - (ix+0.5)*hx
-        dy = yy - (iy+0.5)*hy
-        ratx = dx/hx
-        raty = dy/hy
+        xr = min(max(xout[mi], lb[0]), ub[0])
+        yr = min(max(yout[mi], lb[1]), ub[1])
+        xx = xr - a[0]
+        yy = yr - a[1]
+        ix = int(xx//h[0])
+        iy = int(yy//h[1])
+        ratx = xx/h[0] - (ix+0.5)
+        raty = yy/h[1] - (iy+0.5)
         asx = np.empty(2)
         asy = np.empty(2)
         asx[0] = 0.5 - ratx
         asx[1] = 0.5 + ratx
         asy[0] = 0.5 - raty
         asy[1] = 0.5 + raty
-        sp = 0.0
+        ix += o[0]
+        iy += o[1]
+        fout[mi] = 0.0
         for i in range(2):
+            ixi = (ix + i) % n[0] if p[0] else ix + i
             for j in range(2):
-                sp += f[ix+i,iy+j]*asx[i]*asy[j]
-        fout[mi] = sp
+                iyj = (iy + j) % n[1] if p[1] else iy + j
+                fout[mi] += f[ixi,iyj]*asx[i]*asy[j]
 @numba.njit(parallel=True)
-def _interp2d_k3(f, xout, yout, fout, ax, ay, hx, hy, noclose):
-    ofs = -1 if noclose else 0
+def _interp2d_k3(f, xout, yout, fout, a, h, n, p, o, lb, ub):
     m = fout.shape[0]
     for mi in numba.prange(m):
-        xx = xout[mi] - ax
-        yy = yout[mi] - ay
-        ix = int(xx//hx)
-        iy = int(yy//hy)
-        dx = xx - (ix+0.5)*hx
-        dy = yy - (iy+0.5)*hy
-        ratx = dx/hx
-        raty = dy/hy
+        xr = min(max(xout[mi], lb[0]), ub[0])
+        yr = min(max(yout[mi], lb[1]), ub[1])
+        xx = xr - a[0]
+        yy = yr - a[1]
+        ix = int(xx//h[0])
+        iy = int(yy//h[1])
+        ratx = xx/h[0] - (ix+0.5)
+        raty = yy/h[1] - (iy+0.5)
         asx = np.empty(4)
         asy = np.empty(4)
         asx[0] = -1/16 + ratx*( 1/24 + ratx*( 1/4 - ratx/6))
@@ -341,26 +309,26 @@ def _interp2d_k3(f, xout, yout, fout, ax, ay, hx, hy, noclose):
         asy[1] =  9/16 + raty*( -9/8 + raty*(-1/4 + raty/2))
         asy[2] =  9/16 + raty*(  9/8 + raty*(-1/4 - raty/2))
         asy[3] = -1/16 + raty*(-1/24 + raty*( 1/4 + raty/6))
-        ix += ofs
-        iy += ofs
-        sp = 0.0
+        ix += o[0]-1
+        iy += o[1]-1
+        fout[mi] = 0.0
         for i in range(4):
+            ixi = (ix + i) % n[0] if p[0] else ix + i
             for j in range(4):
-                sp += f[ix+i,iy+j]*asx[i]*asy[j]
-        fout[mi] = sp
+                iyj = (iy + j) % n[1] if p[1] else iy + j
+                fout[mi] += f[ixi,iyj]*asx[i]*asy[j]
 @numba.njit(parallel=True)
-def _interp2d_k5(f, xout, yout, fout, ax, ay, hx, hy, noclose):
-    ofs = -2 if noclose else 0
+def _interp2d_k5(f, xout, yout, fout, a, h, n, p, o, lb, ub):
     m = fout.shape[0]
     for mi in numba.prange(m):
-        xx = xout[mi] - ax
-        yy = yout[mi] - ay
-        ix = int(xx//hx)
-        iy = int(yy//hy)
-        dx = xx - (ix+0.5)*hx
-        dy = yy - (iy+0.5)*hy
-        ratx = dx/hx
-        raty = dy/hy
+        xr = min(max(xout[mi], lb[0]), ub[0])
+        yr = min(max(yout[mi], lb[1]), ub[1])
+        xx = xr - a[0]
+        yy = yr - a[1]
+        ix = int(xx//h[0])
+        iy = int(yy//h[1])
+        ratx = xx/h[0] - (ix+0.5)
+        raty = yy/h[1] - (iy+0.5)
         asx = np.empty(6)
         asy = np.empty(6)
         asx[0] =   3/256 + ratx*(   -9/1920 + ratx*( -5/48/2 + ratx*(  1/8/6 + ratx*( 1/2/24 -  1/8/120*ratx))))
@@ -375,88 +343,80 @@ def _interp2d_k5(f, xout, yout, fout, ax, ay, hx, hy, noclose):
         asy[3] = 150/256 + raty*( 2250/1920 + raty*(-34/48/2 + raty*(-34/8/6 + raty*( 2/2/24 + 10/8/120*raty))))
         asy[4] = -25/256 + raty*( -125/1920 + raty*( 39/48/2 + raty*( 13/8/6 + raty*(-3/2/24 -  5/8/120*raty))))
         asy[5] =   3/256 + raty*(    9/1920 + raty*( -5/48/2 + raty*( -1/8/6 + raty*( 1/2/24 +  1/8/120*raty))))
-        ix += ofs
-        iy += ofs
-        sp = 0.0
+        ix += o[0]-2
+        iy += o[1]-2
+        fout[mi] = 0.0
         for i in range(6):
+            ixi = (ix + i) % n[0] if p[0] else ix + i
             for j in range(6):
-                sp += f[ix+i,iy+j]*asx[i]*asy[j]
-        fout[mi] = sp
+                iyj = (iy + j) % n[1] if p[1] else iy + j
+                fout[mi] += f[ixi,iyj]*asx[i]*asy[j]
 
 INTERP_2D = [None, _interp2d_k1, None, _interp2d_k3, None, _interp2d_k5]
 
-# preparation and extrapolation routines
-def _prepare2d(xv, yv, k, periodic, f, noclose):
-    hx = xv[1] - xv[0]
-    hy = yv[1] - yv[0]
-    fb = f if noclose else _extrapolate2d(f, k, periodic)
-    return xv[0], yv[0], hx, hy, fb
-def _extrapolate2d(f, k, periodic):
-    any_periodic = periodic[0] or periodic[1]
-    if k == 1 and not any_periodic:
-        return f
+# extrapolation routines
+def _extrapolate2d(f, k, p, c, e):
+    padx = (not p[0]) and c[0]
+    pady = (not p[1]) and c[1]
+    if padx or pady:
+        ox = (k//2)+e[0] if padx else 0
+        oy = (k//2)+e[1] if pady else 0
+        fb = np.zeros([f.shape[0]+2*ox, f.shape[1]+2*oy], dtype=f.dtype)
+        _fill2(f, fb, ox, oy)
+        if padx:
+            _extrapolate1d_x(fb, k, ox)
+        if pady:
+            _extrapolate1d_y(fb, k, oy)
+        return fb, [ox, oy]
     else:
-        return _extrapolate2d_periodic(f, k, periodic)
-def _extrapolate2d_periodic(f, k, periodic):
-    offset = k//2
-    newsh = [n + 2*offset + int(p) for n, p in zip(f.shape, periodic)]
-    fb = np.zeros(newsh, dtype=f.dtype)
-    _fill2(f, fb, offset)
-    _extrapolate1d_x(fb, k, periodic[0])
-    _extrapolate1d_y(fb, k, periodic[1])
+        return f, [0, 0]
     return fb
-def _fill2(f, fb, offset):
+def _fill2(f, fb, ox, oy):
     nx = f.shape[0]
     ny = f.shape[1]
     if nx*ny < 100000:
-        fb[offset:offset+nx, offset:offset+ny] = f
+        fb[ox:ox+nx, oy:oy+ny] = f
     else:
-        __fill2(f, fb, offset)
+        __fill2(f, fb, ox, oy)
 @numba.njit(parallel=True)
-def __fill2(f, fb, offset):
+def __fill2(f, fb, ox, oy):
     nx = f.shape[0]
     ny = f.shape[1]
     for i in numba.prange(nx):
         for j in range(ny):
-            fb[i+offset,j+offset] = f[i,j]
+            fb[i+ox,j+oy] = f[i,j]
+def _compute_bounds(a, b, h, p, c, e, k):
+    m = len(a)
+    bounds = [_compute_bounds1(a[i], b[i], h[i], p[i], c[i], e[i], k) for i in range(m)]
+    return [list(x) for x in zip(*bounds)]
 
 ################################################################################
 # Three dimensional routines
 
 class interp3d(object):
-    def __init__(self, xv, yv, zv, f, k=3, periodic=[False, False, False], noclose=False):
+    def __init__(self, a, b, h, f, k=3, p=[False]*3, c=[True]*3, e=[0]*3):
         """
-        xv, yv, zv are the equispaced data nodes
-        f is the data, sampled at meshgrid(xv, yv, zv)
-        k is the order of the local taylor expansions (int)
-            k gives interp accuracy of order k+1
-            only 1, 3, 5, supported
-        periodic gives whether the dimension is taken to be periodic
-            if it is taken to be periodic, it is assumed that the last index
-            is skipped, and is equal to the first index; that is, the interp
-            range is taken to be:
-                xv[0] --> xv[-1] + xh
-            no checking as to whether values live in this region is done
-            at least for now...
-        noclose=True tells the algorithm that padding does not need to be done
-            because there are no points close to the boundaries
-            for non-periodic dims:
-                linear  (doesn't matter)
-                cubic   (within h of domain boundaries)
-                qunitic (within 2h of domain boundaries)
-            for periodic dims:
-                linear   (lower: doesn't matter, upper: within h)
-                cubic    (lower: within h,       upper: within 2h)
-                quintic  (lower: within 2h,      upper: within 3h)
+        See the documentation for interp1d
+        this function is the same, except that a, b, h, p, c, and e
+        should be lists or tuples of length 3 giving the values for each
+        dimension
+        the function behaves as in the 1d case, except that of course padding
+        is required if padding is requested in any dimension
         """
         if k not in [1, 3, 5]:
             raise Exception('k must be 1, 3, or 5')
+        self.a = a
+        self.b = b
+        self.h = h
         self.f = f
         self.k = k
-        self.periodic = periodic
-        self.noclose = noclose
-        self._dtype = f.dtype
-        self._ax, self._ay, self._az, self._hx, self._hy, self._hz, self._fb = _prepare3d(xv, yv, zv, k, periodic, f, noclose)
+        self.p = p
+        self.c = c
+        self.e = e
+        self.n = list(f.shape)
+        self.dtype = f.dtype
+        self._f, self._o = _extrapolate3d(f, k, p, c, e)
+        self.lb, self.ub = _compute_bounds(a, b, h, p, c, e, k)
     def __call__(self, xout, yout, zout, fout=None):
         """
         Interpolate to xout
@@ -468,7 +428,7 @@ class interp3d(object):
             m = int(np.prod(xout.shape))
             copy_made = False
             if fout is None:
-                _out = np.empty(m, dtype=self._dtype)
+                _out = np.empty(m, dtype=self.dtype)
             else:
                 _out = fout.ravel()
                 if _out.base is None:
@@ -476,7 +436,7 @@ class interp3d(object):
             _xout = xout.ravel()
             _yout = yout.ravel()
             _zout = zout.ravel()
-            func(self._fb, _xout, _yout, _zout, _out, self._ax, self._ay, self._az, self._hx, self._hy, self._hz, self.noclose)
+            func(self._f, _xout, _yout, _zout, _out, self.a, self.h, self.n, self.p, self._o, self.lb, self.ub)
             if copy_made:
                 fout[:] = _out
             return _out.reshape(xout.shape)
@@ -485,26 +445,26 @@ class interp3d(object):
             _yout = np.array([yout],)
             _zout = np.array([zout],)
             _out = np.empty(1)
-            func(self._fb, _xout, _yout, _zout, _out, self._ax, self._ay, self._az, self._hx, self._hy, self._hz, self.noclose)
+            func(self._f, _xout, _yout, _zout, _out, self.a, self.h, self.n, self.p, self._o, self.lb, self.ub)
             return _out[0]
 
-# the actual interpolation routines
+# interpolation routines
 @numba.njit(parallel=True)
-def _interp3d_k1(f, xout, yout, zout, fout, ax, ay, az, hx, hy, hz, noclose):
+def _interp3d_k1(f, xout, yout, zout, fout, a, h, n, p, o, lb, ub):
     m = fout.shape[0]
     for mi in numba.prange(m):
-        xx = xout[mi] - ax
-        yy = yout[mi] - ay
-        zz = zout[mi] - az
-        ix = int(xx//hx)
-        iy = int(yy//hy)
-        iz = int(zz//hz)
-        dx = xx - (ix+0.5)*hx
-        dy = yy - (iy+0.5)*hy
-        dz = zz - (iz+0.5)*hz
-        ratx = dx/hx
-        raty = dy/hy
-        ratz = dz/hz
+        xr = min(max(xout[mi], lb[0]), ub[0])
+        yr = min(max(yout[mi], lb[1]), ub[1])
+        zr = min(max(zout[mi], lb[2]), ub[2])
+        xx = xr - a[0]
+        yy = yr - a[1]
+        zz = zr - a[2]
+        ix = int(xx//h[0])
+        iy = int(yy//h[1])
+        iz = int(zz//h[2])
+        ratx = xx/h[0] - (ix+0.5)
+        raty = yy/h[1] - (iy+0.5)
+        ratz = zz/h[2] - (iz+0.5)
         asx = np.empty(2)
         asy = np.empty(2)
         asz = np.empty(2)
@@ -514,29 +474,33 @@ def _interp3d_k1(f, xout, yout, zout, fout, ax, ay, az, hx, hy, hz, noclose):
         asy[1] = 0.5 + raty
         asz[0] = 0.5 - ratz
         asz[1] = 0.5 + ratz
-        sp = 0.0
+        ix += o[0]
+        iy += o[1]
+        iz += o[2]
+        fout[mi] = 0.0
         for i in range(2):
+            ixi = (ix + i) % n[0] if p[0] else ix + i
             for j in range(2):
+                iyj = (iy + j) % n[1] if p[1] else iy + j
                 for k in range(2):
-                    sp += f[ix+i,iy+j,iz+k]*asx[i]*asy[j]*asz[k]
-        fout[mi] = sp
+                    izk = (iz + k) % n[2] if p[2] else iz + k
+                    fout[mi] += f[ixi,iyj,izk]*asx[i]*asy[j]*asz[k]
 @numba.njit(parallel=True)
-def _interp3d_k3(f, xout, yout, zout, fout, ax, ay, az, hx, hy, hz, noclose):
-    ofs = -1 if noclose else 0
+def _interp3d_k3(f, xout, yout, zout, fout, a, h, n, p, o, lb, ub):
     m = fout.shape[0]
     for mi in numba.prange(m):
-        xx = xout[mi] - ax
-        yy = yout[mi] - ay
-        zz = zout[mi] - az
-        ix = int(xx//hx)
-        iy = int(yy//hy)
-        iz = int(zz//hz)
-        dx = xx - (ix+0.5)*hx
-        dy = yy - (iy+0.5)*hy
-        dz = zz - (iz+0.5)*hz
-        ratx = dx/hx
-        raty = dy/hy
-        ratz = dz/hz
+        xr = min(max(xout[mi], lb[0]), ub[0])
+        yr = min(max(yout[mi], lb[1]), ub[1])
+        zr = min(max(zout[mi], lb[2]), ub[2])
+        xx = xr - a[0]
+        yy = yr - a[1]
+        zz = zr - a[2]
+        ix = int(xx//h[0])
+        iy = int(yy//h[1])
+        iz = int(zz//h[2])
+        ratx = xx/h[0] - (ix+0.5)
+        raty = yy/h[1] - (iy+0.5)
+        ratz = zz/h[2] - (iz+0.5)
         asx = np.empty(4)
         asy = np.empty(4)
         asz = np.empty(4)
@@ -552,32 +516,33 @@ def _interp3d_k3(f, xout, yout, zout, fout, ax, ay, az, hx, hy, hz, noclose):
         asz[1] =  9/16 + ratz*( -9/8 + ratz*(-1/4 + ratz/2))
         asz[2] =  9/16 + ratz*(  9/8 + ratz*(-1/4 - ratz/2))
         asz[3] = -1/16 + ratz*(-1/24 + ratz*( 1/4 + ratz/6))
-        sp = 0.0
-        ix += ofs
-        iy += ofs
-        iz += ofs
+        ix += o[0]-1
+        iy += o[1]-1
+        iz += o[2]-1
+        fout[mi] = 0.0
         for i in range(4):
+            ixi = (ix + i) % n[0] if p[0] else ix + i
             for j in range(4):
+                iyj = (iy + j) % n[1] if p[1] else iy + j
                 for k in range(4):
-                    sp += f[ix+i,iy+j,iz+k]*asx[i]*asy[j]*asz[k]
-        fout[mi] = sp
+                    izk = (iz + k) % n[2] if p[2] else iz + k
+                    fout[mi] += f[ixi,iyj,izk]*asx[i]*asy[j]*asz[k]
 @numba.njit(parallel=True)
-def _interp3d_k5(f, xout, yout, zout, fout, ax, ay, az, hx, hy, hz, noclose):
-    ofs = -2 if noclose else 0
+def _interp3d_k5(f, xout, yout, zout, fout, a, h, n, p, o, lb, ub):
     m = fout.shape[0]
     for mi in numba.prange(m):
-        xx = xout[mi] - ax
-        yy = yout[mi] - ay
-        zz = zout[mi] - az
-        ix = int(xx//hx)
-        iy = int(yy//hy)
-        iz = int(zz//hz)
-        dx = xx - (ix+0.5)*hx
-        dy = yy - (iy+0.5)*hy
-        dz = zz - (iz+0.5)*hz
-        ratx = dx/hx
-        raty = dy/hy
-        ratz = dz/hz
+        xr = min(max(xout[mi], lb[0]), ub[0])
+        yr = min(max(yout[mi], lb[1]), ub[1])
+        zr = min(max(zout[mi], lb[2]), ub[2])
+        xx = xr - a[0]
+        yy = yr - a[1]
+        zz = zr - a[2]
+        ix = int(xx//h[0])
+        iy = int(yy//h[1])
+        iz = int(zz//h[2])
+        ratx = xx/h[0] - (ix+0.5)
+        raty = yy/h[1] - (iy+0.5)
+        ratz = zz/h[2] - (iz+0.5)
         asx = np.empty(6)
         asy = np.empty(6)
         asz = np.empty(6)
@@ -599,55 +564,55 @@ def _interp3d_k5(f, xout, yout, zout, fout, ax, ay, az, hx, hy, hz, noclose):
         asz[3] = 150/256 + ratz*( 2250/1920 + ratz*(-34/48/2 + ratz*(-34/8/6 + ratz*( 2/2/24 + 10/8/120*ratz))))
         asz[4] = -25/256 + ratz*( -125/1920 + ratz*( 39/48/2 + ratz*( 13/8/6 + ratz*(-3/2/24 -  5/8/120*ratz))))
         asz[5] =   3/256 + ratz*(    9/1920 + ratz*( -5/48/2 + ratz*( -1/8/6 + ratz*( 1/2/24 +  1/8/120*ratz))))
-        sp = 0.0
-        ix += ofs
-        iy += ofs
-        iz += ofs
+        ix += o[0]-2
+        iy += o[1]-2
+        iz += o[2]-2
+        fout[mi] = 0.0
         for i in range(6):
+            ixi = (ix + i) % n[0] if p[0] else ix + i
             for j in range(6):
+                iyj = (iy + j) % n[1] if p[1] else iy + j
                 for k in range(6):
-                    sp += f[ix+i,iy+j,iz+k]*asx[i]*asy[j]*asz[k]
-        fout[mi] = sp
+                    izk = (iz + k) % n[2] if p[2] else iz + k
+                    fout[mi] += f[ixi,iyj,izk]*asx[i]*asy[j]*asz[k]
 
 INTERP_3D = [None, _interp3d_k1, None, _interp3d_k3, None, _interp3d_k5]
 
-# preparation and extrapolation routines
-def _prepare3d(xv, yv, zv, k, periodic, f, noclose):
-    hx = xv[1] - xv[0]
-    hy = yv[1] - yv[0]
-    hz = zv[1] - zv[0]
-    fb = f if noclose else _extrapolate3d(f, k, periodic)
-    return xv[0], yv[0], zv[0], hx, hy, hz, fb
-def _extrapolate3d(f, k, periodic):
-    any_periodic = periodic[0] or periodic[1] or periodic[2]
-    if k == 1 and not any_periodic:
-        return f
+# extrapolation routines
+def _extrapolate3d(f, k, p, c, e):
+    padx = (not p[0]) and c[0]
+    pady = (not p[1]) and c[1]
+    padz = (not p[2]) and c[2]
+    if padx or pady or padz:
+        ox = (k//2)+e[0] if padx else 0
+        oy = (k//2)+e[1] if pady else 0
+        oz = (k//2)+e[2] if padz else 0
+        fb = np.zeros([f.shape[0]+2*ox, f.shape[1]+2*oy, f.shape[2]+2*oz], dtype=f.dtype)
+        _fill3(f, fb, ox, oy, oz)
+        if padx:
+            _extrapolate1d_x(fb, k, ox)
+        if pady:
+            _extrapolate1d_y(fb, k, oy)
+        if padz:
+            _extrapolate1d_z(fb, k, oz)
+        return fb, [ox, oy, oz]
     else:
-        return _extrapolate3d_periodic(f, k, periodic)
-def _extrapolate3d_periodic(f, k, periodic):
-    offset = k//2
-    newsh = [n + 2*offset + int(p) for n, p in zip(f.shape, periodic)]
-    fb = np.zeros(newsh, dtype=f.dtype)
-    _fill3(f, fb, offset)
-    _extrapolate1d_x(fb, k, periodic[0])
-    _extrapolate1d_y(fb, k, periodic[1])
-    _extrapolate1d_z(fb, k, periodic[2])
+        return f, [0, 0, 0]
     return fb
-def _fill3(f, fb, offset):
+def _fill3(f, fb, ox, oy, oz):
     nx = f.shape[0]
     ny = f.shape[1]
     nz = f.shape[2]
     if nx*ny*nz < 100000:
-        fb[offset:offset+nx, offset:offset+ny, offset:offset+nz] = f
+        fb[ox:ox+nx, oy:oy+ny, oz:oz+nz] = f
     else:
-        __fill3(f, fb, offset)
+        __fill3(f, fb, ox, oy, oz)
 @numba.njit(parallel=True)
-def __fill3(f, fb, offset):
+def __fill3(f, fb, ox, oy, oz):
     nx = f.shape[0]
     ny = f.shape[1]
     nz = f.shape[2]
     for i in numba.prange(nx):
         for j in range(ny):
             for k in range(nz):
-                fb[i+offset,j+offset,k+offset] = f[i,j,k]
-
+                fb[i+ox,j+oy,k+oz] = f[i,j,k]
