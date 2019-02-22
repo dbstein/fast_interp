@@ -14,7 +14,7 @@ import gc
 
 print('\n----- Testing Error and Timings vs. Scipy -----')
 
-ntest = 10*2**np.arange(8)
+ntest = 10*2**np.arange(9)
 ktest = [1, 3, 5]
 my_errors = np.zeros([ntest.shape[0], 3], dtype=float)
 sp_errors = np.zeros([ntest.shape[0], 3], dtype=float)
