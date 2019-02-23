@@ -36,11 +36,24 @@ In the case given above, the y-dimension is specified to be periodic, and the us
 
 For fitting, this greatly outperforms the scipy options, since... it doesn't have to fit anything. In the general case, it does allocate and copy a padded array the size of the data, so that's slightly inefficient if you'll only be interpolating to a few points, but its still much cheaper (often orders of magnitude) than the fitting stage of the scipy functions. If the function can avoid making a copy, it will, this happens if all dimensions are periodic, linear with no extrapolation, or the user has requested to ignore close evaluation by setting the variable c. Here is the setup cost in 2D, where copies are required, compared to scipy.RectBivariateSpline:
 
+![Solution](fast_interp_setup.png?raw=true "Title")
+
+For extremely small interpolation problems, the provided scipy.interpolate functions are a bit faster. In 2D, this code breaks even on a grid of ~30 by 30, and by ~100 by 100 is about 10 times faster. For a 2000 by 2000 grid this advantage is at least a factor of 100, and can be as much as 1000+. Besides getting the parallel and SIMD boost from numba, the algorithm actually scales better, since on a regular grid locating the points on the grid is an order one operation. You can get a sense of break-even points on your system for 1D and 2D by running the tests in the examples folder. Shown below are timings in 2D, on an n by n grid, interpolating to n^2 points, comparing scipy and fast_interp:
+
+![Solution](fast_interp_eval.png?raw=true "Title")
+
+And the ratio between the two:
+
+![Solution](fast_interp_ratio.png?raw=true "Title")
+
+In terms of error, the algorithm scales in the same way as the scipy.interpolate functions, although the scipy functions provide *slightly* better constants. The error on this code could probably be improved a bit by making slightly different choices about the points at which finite-differences are computed and how wide the stencils are, but this would require wider padding of the input data. When the grid spacing becomes fine, the algorithm appears to be slightly more stable than the scipy.interpolate functions, with a bit less digit loss on very fine grids. Here is an error comparison in 2D:
+
+![Solution](fast_interp_error.png?raw=true "Title")
+
+A final consideration is numerical stability. In the following plot, I show a test of interpolation accuracy when some random noise is added to the function that is being interpolated. The gray line shows the level of noise that was added; even for k=5 the algorithm is stable (more stable than the scipy.interpolate) functions:
 
 
-For extremely small interpolation problems, the provided scipy.interpolate functions are a bit faster. In 2D, this code breaks even on a grid of ~30 by 30, and by ~100 by 100 is about 10 times faster. For a 2000 by 2000 grid this advantage is at least a factor of 100, and can be as much as 1000+. Besides getting the parallel and SIMD boost from numba, the algorithm actually scales better, since on a regular grid locating the points on the grid is an order one operation. You can get a sense of break-even points on your system for 1D and 2D by running the tests in the examples folder.
 
-In terms of error, the algorithm scales in the same way as the scipy.interpolate functions, although the scipy functions provide *slightly* better constants. You can see this by running the provide 1D and 2D tests. The error on this code could probably be improved a bit by making slightly different choices about the points at which finite-differences are computed and how wide the stencils are, but this would require wider padding of the input data and a bit of effort. When the grid spacing becomes fine, the algorithm appears to be slightly more stable than the scipy.interpolate functions, with a bit less digit loss on very fine grids.
 
 ## To do, perhaps:
 
