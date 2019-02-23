@@ -34,7 +34,9 @@ In the case given above, the y-dimension is specified to be periodic, and the us
 
 ## Performance (on my 12 core machine...)
 
-For fitting, this greatly outperforms the scipy options, since... it doesn't have to fit anything. In the general case, it does allocate and copy a padded array the size of the data, so that's slightly inefficient if you'll only be interpolating to a few points, but its still much cheaper (often orders of magnitude) than the fitting stage of the scipy functions. If the function can avoid making a copy, it will, this happens if all dimensions are periodic, linear with no extrapolation, or the user has requested to ignore close evaluation by setting the variable c.
+For fitting, this greatly outperforms the scipy options, since... it doesn't have to fit anything. In the general case, it does allocate and copy a padded array the size of the data, so that's slightly inefficient if you'll only be interpolating to a few points, but its still much cheaper (often orders of magnitude) than the fitting stage of the scipy functions. If the function can avoid making a copy, it will, this happens if all dimensions are periodic, linear with no extrapolation, or the user has requested to ignore close evaluation by setting the variable c. Here is the setup cost in 2D, where copies are required, compared to scipy.RectBivariateSpline:
+
+
 
 For extremely small interpolation problems, the provided scipy.interpolate functions are a bit faster. In 2D, this code breaks even on a grid of ~30 by 30, and by ~100 by 100 is about 10 times faster. For a 2000 by 2000 grid this advantage is at least a factor of 100, and can be as much as 1000+. Besides getting the parallel and SIMD boost from numba, the algorithm actually scales better, since on a regular grid locating the points on the grid is an order one operation. You can get a sense of break-even points on your system for 1D and 2D by running the tests in the examples folder.
 

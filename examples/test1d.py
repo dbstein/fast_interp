@@ -24,6 +24,8 @@ sp_setup_time = np.zeros([ntest.shape[0], 3], dtype=float)
 my_eval_time = np.zeros([ntest.shape[0], 3], dtype=float)
 sp_eval_time = np.zeros([ntest.shape[0], 3], dtype=float)
 
+random_noise_size = 0.0
+
 for ki, k in enumerate(ktest):
 	print('--- Testing for k =', k, '---')
 	for ni, n in enumerate(ntest):
@@ -36,9 +38,9 @@ for ki, k in enumerate(ktest):
 		test_x = (x + np.random.rand(*x.shape)*h)[:-1]
 
 		def test_function(x):
-		    return np.exp(x)*np.cos(x) + x**2/(1+x)
+		    return np.exp(x)*np.cos(370*x) + x**2/(1+x)
 
-		f = test_function(x)
+		f = test_function(x) + (np.random.rand(*x.shape)-0.5)*random_noise_size
 		fa = test_function(test_x)
 
 		# run once to compile numba functions
@@ -110,6 +112,7 @@ fig, ax = plt.subplots(1,1)
 ax.plot(ntest, sp_eval_time[:,0]/my_eval_time[:,0], color='black',  label='Linear')
 ax.plot(ntest, sp_eval_time[:,1]/my_eval_time[:,1], color='blue',   label='Cubic')
 ax.plot(ntest, sp_eval_time[:,2]/my_eval_time[:,2], color='purple', label='Qunitic')
+ax.axhline(1.0, color='gray')
 ax.set_xlabel(r'$n$')
 ax.set_ylabel('Ratio (scipy/this)')
 ax.set_xscale('log')

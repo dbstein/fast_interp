@@ -14,7 +14,7 @@ import gc
 
 print('\n----- Testing Error and Timings vs. Scipy -----')
 
-ntest = 10*2**np.arange(9)
+ntest = 10*2**np.arange(8)
 ktest = [1, 3, 5]
 my_errors = np.zeros([ntest.shape[0], 3], dtype=float)
 sp_errors = np.zeros([ntest.shape[0], 3], dtype=float)
@@ -24,6 +24,8 @@ my_eval_time = np.zeros([ntest.shape[0], 3], dtype=float)
 sp_eval_time = np.zeros([ntest.shape[0], 3], dtype=float)
 
 gc.disable()
+
+random_noise_size = 0.0
 
 for ki, k in enumerate(ktest):
 	print('--- Testing for k =', k, '---')
@@ -39,7 +41,7 @@ for ki, k in enumerate(ktest):
 		yo += np.random.rand(*yo.shape)*h
 
 		test_function = lambda x, y: np.exp(x)*np.cos(y) + x*y**3/(1 + x + y)
-		f = test_function(x, y)
+		f = test_function(x, y) + (np.random.rand(*x.shape)-0.5)*random_noise_size
 		fa = test_function(xo, yo)
 
 		# run once to compile numba functions
@@ -120,6 +122,7 @@ fig, ax = plt.subplots(1,1)
 ax.plot(ntest, sp_eval_time[:,0]/my_eval_time[:,0], color='black',  label='Linear')
 ax.plot(ntest, sp_eval_time[:,1]/my_eval_time[:,1], color='blue',   label='Cubic')
 ax.plot(ntest, sp_eval_time[:,2]/my_eval_time[:,2], color='purple', label='Qunitic')
+ax.axhline(1.0, color='gray')
 ax.set_xlabel(r'$n$')
 ax.set_ylabel('Ratio (scipy/this)')
 ax.set_xscale('log')
