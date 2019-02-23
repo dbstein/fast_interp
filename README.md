@@ -50,10 +50,9 @@ In terms of error, the algorithm scales in the same way as the scipy.interpolate
 
 ![Solution](fast_interp_error.png?raw=true "Title")
 
-A final consideration is numerical stability. In the following plot, I show a test of interpolation accuracy when some random noise is added to the function that is being interpolated. The gray line shows the level of noise that was added; even for k=5 the algorithm is stable (more stable than the scipy.interpolate) functions:
+A final consideration is numerical stability. In the following plot, I show a test of interpolation accuracy when some random noise is added to the function that is being interpolated. The gray line shows the level of noise that was added; even for k=5 the algorithm is stable (and for all k, more stable than the scipy.interpolate) functions:
 
-
-
+![Solution](fast_interp_stability.png?raw=true "Title")
 
 ## To do, perhaps:
 
