@@ -24,7 +24,7 @@ sp_setup_time = np.zeros([ntest.shape[0], 3], dtype=float)
 my_eval_time = np.zeros([ntest.shape[0], 3], dtype=float)
 sp_eval_time = np.zeros([ntest.shape[0], 3], dtype=float)
 
-random_noise_size = 0.0
+random_noise_size = 1.0e-5
 
 for ki, k in enumerate(ktest):
 	print('--- Testing for k =', k, '---')
@@ -38,9 +38,9 @@ for ki, k in enumerate(ktest):
 		test_x = (x + np.random.rand(*x.shape)*h)[:-1]
 
 		def test_function(x):
-		    return np.exp(x)*np.cos(370*x) + x**2/(1+x)
+		    return np.exp(x)*np.cos(x) + x**2/(1+x)
 
-		f = test_function(x) + (np.random.rand(*x.shape)-0.5)*random_noise_size
+		f = test_function(x) + 2*(np.random.rand(*x.shape)-0.5)*random_noise_size
 		fa = test_function(test_x)
 
 		# run once to compile numba functions
@@ -73,6 +73,8 @@ ax.plot(ntest, my_errors[:,2], color='purple', label='This, Qunitic')
 ax.plot(ntest, sp_errors[:,0], color='black',  linestyle='--', label='Scipy, Linear')
 ax.plot(ntest, sp_errors[:,1], color='blue',   linestyle='--', label='Scipy, Cubic')
 ax.plot(ntest, sp_errors[:,2], color='purple', linestyle='--', label='Scipy, Qunitic')
+if random_noise_size != 0.0:
+	ax.axhline(random_noise_size, color='gray')
 ax.set_xlabel(r'$n$')
 ax.set_ylabel('Maximum Error')
 ax.set_xscale('log')

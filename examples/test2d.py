@@ -41,7 +41,7 @@ for ki, k in enumerate(ktest):
 		yo += np.random.rand(*yo.shape)*h
 
 		test_function = lambda x, y: np.exp(x)*np.cos(y) + x*y**3/(1 + x + y)
-		f = test_function(x, y) + (np.random.rand(*x.shape)-0.5)*random_noise_size
+		f = test_function(x, y) + 2*(np.random.rand(*x.shape)-0.5)*random_noise_size
 		fa = test_function(xo, yo)
 
 		# run once to compile numba functions
