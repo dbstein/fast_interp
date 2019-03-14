@@ -16,15 +16,15 @@ gc.disable()
 print('\n----- Testing Error and Timings vs. Scipy -----')
 
 ntest = 10*2**np.arange(18)
-ktest = [1, 3, 5]
-my_errors = np.zeros([ntest.shape[0], 3], dtype=float)
-sp_errors = np.zeros([ntest.shape[0], 3], dtype=float)
-my_setup_time = np.zeros([ntest.shape[0], 3], dtype=float)
-sp_setup_time = np.zeros([ntest.shape[0], 3], dtype=float)
-my_eval_time = np.zeros([ntest.shape[0], 3], dtype=float)
-sp_eval_time = np.zeros([ntest.shape[0], 3], dtype=float)
+ktest = [1, 3, 5, 7, 9]
+my_errors = np.zeros([ntest.shape[0], len(ktest)], dtype=float)
+sp_errors = np.zeros([ntest.shape[0], len(ktest)], dtype=float)
+my_setup_time = np.zeros([ntest.shape[0], len(ktest)], dtype=float)
+sp_setup_time = np.zeros([ntest.shape[0], len(ktest)], dtype=float)
+my_eval_time = np.zeros([ntest.shape[0], len(ktest)], dtype=float)
+sp_eval_time = np.zeros([ntest.shape[0], len(ktest)], dtype=float)
 
-random_noise_size = 1.0e-5
+random_noise_size = 0.0
 
 for ki, k in enumerate(ktest):
 	print('--- Testing for k =', k, '---')
@@ -55,14 +55,15 @@ for ki, k in enumerate(ktest):
 		my_eval_time[ni, ki] = (time.time()-st)*1000
 		my_errors[ni, ki] = np.abs(fe - fa).max()
 
-		# scipy interp
-		st = time.time()
-		interpolater = sp.interpolate.InterpolatedUnivariateSpline(x, f, k=k)
-		sp_setup_time[ni, ki] = (time.time()-st)*1000
-		st = time.time()
-		fe = interpolater(test_x)
-		sp_eval_time[ni, ki] = (time.time()-st)*1000
-		sp_errors[ni, ki] = np.abs(fe - fa).max()
+		if k <= 5:
+			# scipy interp
+			st = time.time()
+			interpolater = sp.interpolate.InterpolatedUnivariateSpline(x, f, k=k)
+			sp_setup_time[ni, ki] = (time.time()-st)*1000
+			st = time.time()
+			fe = interpolater(test_x)
+			sp_eval_time[ni, ki] = (time.time()-st)*1000
+			sp_errors[ni, ki] = np.abs(fe - fa).max()
 
 		gc.collect()
 
@@ -70,6 +71,8 @@ fig, ax = plt.subplots(1,1)
 ax.plot(ntest, my_errors[:,0], color='black',  label='This, Linear')
 ax.plot(ntest, my_errors[:,1], color='blue',   label='This, Cubic')
 ax.plot(ntest, my_errors[:,2], color='purple', label='This, Qunitic')
+ax.plot(ntest, my_errors[:,3], color='red',    label='This, Septic')
+ax.plot(ntest, my_errors[:,4], color='green',  label='This, Nonic')
 ax.plot(ntest, sp_errors[:,0], color='black',  linestyle='--', label='Scipy, Linear')
 ax.plot(ntest, sp_errors[:,1], color='blue',   linestyle='--', label='Scipy, Cubic')
 ax.plot(ntest, sp_errors[:,2], color='purple', linestyle='--', label='Scipy, Qunitic')
@@ -86,6 +89,8 @@ fig, ax = plt.subplots(1,1)
 ax.plot(ntest, my_setup_time[:,0], color='black',  label='This, Linear')
 ax.plot(ntest, my_setup_time[:,1], color='blue',   label='This, Cubic')
 ax.plot(ntest, my_setup_time[:,2], color='purple', label='This, Qunitic')
+ax.plot(ntest, my_setup_time[:,3], color='red',    label='This, Septic')
+ax.plot(ntest, my_setup_time[:,4], color='green',  label='This, Nonic')
 ax.plot(ntest, sp_setup_time[:,0], color='black',  linestyle='--', label='Scipy, Linear')
 ax.plot(ntest, sp_setup_time[:,1], color='blue',   linestyle='--', label='Scipy, Cubic')
 ax.plot(ntest, sp_setup_time[:,2], color='purple', linestyle='--', label='Scipy, Qunitic')
@@ -100,6 +105,8 @@ fig, ax = plt.subplots(1,1)
 ax.plot(ntest, my_eval_time[:,0], color='black',  label='This, Linear')
 ax.plot(ntest, my_eval_time[:,1], color='blue',   label='This, Cubic')
 ax.plot(ntest, my_eval_time[:,2], color='purple', label='This, Qunitic')
+ax.plot(ntest, my_eval_time[:,3], color='red',    label='This, Septic')
+ax.plot(ntest, my_eval_time[:,4], color='green',  label='This, Nontic')
 ax.plot(ntest, sp_eval_time[:,0], color='black',  linestyle='--', label='Scipy, Linear')
 ax.plot(ntest, sp_eval_time[:,1], color='blue',   linestyle='--', label='Scipy, Cubic')
 ax.plot(ntest, sp_eval_time[:,2], color='purple', linestyle='--', label='Scipy, Qunitic')

@@ -16,8 +16,8 @@ gc.disable()
 print('\n----- Testing Error -----')
 
 ntest = 10*2**np.arange(6)
-ktest = [1, 3, 5]
-my_errors = np.zeros([ntest.shape[0], 3], dtype=float)
+ktest = [1, 3, 5, 7, 9]
+my_errors = np.zeros([ntest.shape[0], len(ktest)], dtype=float)
 
 for ki, k in enumerate(ktest):
 	print('--- Testing for k =', k, '---')
@@ -44,15 +44,20 @@ for ki, k in enumerate(ktest):
 
 		gc.collect()
 
-nts = ntest[1:-1].astype(float)
+nts  = ntest[1:-1].astype(float)
+nts2 = ntest[0:-3].astype(float)
 
 fig, ax = plt.subplots(1,1)
 ax.plot(ntest, my_errors[:,0], color='black',  label='Linear')
 ax.plot(ntest, my_errors[:,1], color='blue',   label='Cubic')
 ax.plot(ntest, my_errors[:,2], color='purple', label='Qunitic')
-ax.plot(nts, 2*nts**-2, color='black', alpha=0.7, label=r'$\mathcal{O}(h^2)$')
-ax.plot(nts, 0.5*nts**-4, color='black', alpha=0.5, label=r'$\mathcal{O}(h^4)$')
-ax.plot(nts, 0.5*nts**-6, color='black', alpha=0.3, label=r'$\mathcal{O}(h^6)$')
+ax.plot(ntest, my_errors[:,3], color='red',    label='Septic')
+ax.plot(ntest, my_errors[:,4], color='green',  label='Nonic')
+ax.plot(nts,  2*nts**-2,     color='black', alpha=0.9, label=r'$\mathcal{O}(h^2)$')
+ax.plot(nts,  0.5*nts**-4,   color='black', alpha=0.7, label=r'$\mathcal{O}(h^4)$')
+ax.plot(nts,  0.5*nts**-6,   color='black', alpha=0.5, label=r'$\mathcal{O}(h^6)$')
+ax.plot(nts2, 0.2*nts2**-8,  color='black', alpha=0.3, label=r'$\mathcal{O}(h^8)$')
+ax.plot(nts2, 0.2*nts2**-10, color='black', alpha=0.1, label=r'$\mathcal{O}(h^10)$')
 ax.set_xlabel(r'$n$')
 ax.set_ylabel('Maximum Error')
 ax.set_xscale('log')
