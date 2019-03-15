@@ -102,7 +102,7 @@ def _single_interp_1d_k5(f, x, a, h, n):
     for i in range(6):
         fout += f[ix+i]*asx[i]
     return fout
-@numba.njit(parallel=True)
+@numba.njit
 def _single_interp_1d_k7(f, x, a, h, n):
     xx = x - a
     ix = min(int(xx//h), n-2)
@@ -128,39 +128,39 @@ def _get_ind(x, ubs):
         ind += 1
     return ind
 
-@numba.njit
+@numba.njit(fastmath=True)
 def _evaluate1_1(fs, x, lbs, ubs, hs, n):
     ind = _get_ind(x, ubs)
     return _single_interp_1d_k1(fs[ind], x, lbs[ind], hs[ind], n)
-@numba.njit
+@numba.njit(fastmath=True)
 def _evaluate1_3(fs, x, lbs, ubs, hs, n):
     ind = _get_ind(x, ubs)
     return _single_interp_1d_k3(fs[ind], x, lbs[ind], hs[ind], n)
-@numba.njit
+@numba.njit(fastmath=True)
 def _evaluate1_5(fs, x, lbs, ubs, hs, n):
     ind = _get_ind(x, ubs)
     return _single_interp_1d_k5(fs[ind], x, lbs[ind], hs[ind], n)
-@numba.njit
+@numba.njit(fastmath=True)
 def _evaluate1_7(fs, x, lbs, ubs, hs, n):
     ind = _get_ind(x, ubs)
     return _single_interp_1d_k7(fs[ind], x, lbs[ind], hs[ind], n)
 
-@numba.njit(parallel=True)
+@numba.njit(parallel=True, fastmath=True)
 def _evaluate_1(fs, xs, out, lbs, ubs, hs, n):
     m = xs.shape[0]
     for i in numba.prange(m):
         out[i] = _evaluate1_1(fs, xs[i], lbs, ubs, hs, n)
-@numba.njit(parallel=True)
+@numba.njit(parallel=True, fastmath=True)
 def _evaluate_3(fs, xs, out, lbs, ubs, hs, n):
     m = xs.shape[0]
     for i in numba.prange(m):
         out[i] = _evaluate1_3(fs, xs[i], lbs, ubs, hs, n)
-@numba.njit(parallel=True)
+@numba.njit(parallel=True, fastmath=True)
 def _evaluate_5(fs, xs, out, lbs, ubs, hs, n):
     m = xs.shape[0]
     for i in numba.prange(m):
         out[i] = _evaluate1_5(fs, xs[i], lbs, ubs, hs, n)
-@numba.njit(parallel=True)
+@numba.njit(parallel=True, fastmath=True)
 def _evaluate_7(fs, xs, out, lbs, ubs, hs, n):
     m = xs.shape[0]
     for i in numba.prange(m):
