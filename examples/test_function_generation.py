@@ -38,3 +38,6 @@ print('')
 print('Error:       {:0.1e}'.format(err.max()))
 print('True time:   {:0.1f}'.format(true_func_time*1000))
 print('Approx time: {:0.1f}'.format(approx_func_time*1000))
+
+from fast_interp.function_generator import _evaluate_5
+_evaluate_5.parallel_diagnostics(level=4)
