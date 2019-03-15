@@ -36,9 +36,10 @@ class FunctionGenerator(object):
         Evaluate function at input x
         """
         if isinstance(x, np.ndarray):
-            out = np.zeros_like(x)
-            _evaluates[self.k](self.fs, x, out, self.lbs, self.ubs, self.hs, self.n)
-            return out
+            xr = x.ravel()
+            out = np.zeros_like(xr)
+            _evaluates[self.k](self.fs, xr, out, self.lbs, self.ubs, self.hs, self.n)
+            return out.reshape(x.shape)
         else:
             return _evaluate1s[self.k](self.fs, x, self.lbs, self.ubs, self.hs, self.n)
     def _fit(self, a, b):

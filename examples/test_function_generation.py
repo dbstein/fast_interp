@@ -3,7 +3,7 @@ import fast_interp
 import time
 from scipy.special import struve
 
-n = 100000
+n = 1000000
 
 # function to test evaluation of
 # in this case, nasty and singular at the origin
@@ -12,7 +12,8 @@ def true_func(x):
 approx_range = [1e-14, 10]
 
 # generate approximation
-approx_func = fast_interp.FunctionGenerator(true_func, approx_range[0], approx_range[1], k=5)
+approx_func5 = fast_interp.FunctionGenerator(true_func, approx_range[0], approx_range[1], k=5)
+approx_func7 = fast_interp.FunctionGenerator(true_func, approx_range[0], approx_range[1], k=7)
 
 def random_in(n, a, b):
 	x = np.random.rand(n)
@@ -26,18 +27,29 @@ st = time.time()
 ft = true_func(xtest)
 true_func_time = time.time() - st
 
-fa = approx_func(xtest)
+fa = approx_func5(xtest)
 st = time.time()
-fa = approx_func(xtest)
-approx_func_time = time.time()-st
+fa5 = approx_func5(xtest)
+approx_func5_time = time.time()-st
+
+fa = approx_func7(xtest)
+st = time.time()
+fa7 = approx_func7(xtest)
+approx_func7_time = time.time()-st
 
 reg = np.abs(ft)
-reg[reg < 1] = 1
-err = np.abs(fa-ft)/reg
-print('')
-print('Error:       {:0.1e}'.format(err.max()))
-print('True time:   {:0.1f}'.format(true_func_time*1000))
-print('Approx time: {:0.1f}'.format(approx_func_time*1000))
 
-from fast_interp.function_generator import _evaluate_5
-_evaluate_5.parallel_diagnostics(level=4)
+reg[reg < 1] = 1
+err5 = np.abs(fa5-ft)/reg
+err7 = np.abs(fa7-ft)/reg
+
+print('')
+print('Error (5):       {:0.1e}'.format(err5.max()))
+print('Error (7):       {:0.1e}'.format(err7.max()))
+print('True time:       {:0.1f}'.format(true_func_time*1000))
+print('Approx time (5): {:0.1f}'.format(approx_func5_time*1000))
+print('Approx time (7): {:0.1f}'.format(approx_func7_time*1000))
+
+
+
+
