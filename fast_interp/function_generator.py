@@ -31,15 +31,15 @@ class FunctionGenerator(object):
         self.ubs = np.array(self.ubs)
         self.hs = np.array(self.hs)
         self.fs = np.row_stack(self.fs)
-    def __call__(self, x):
+    def __call__(self, x, out=None):
         """
         Evaluate function at input x
         """
         if isinstance(x, np.ndarray):
             xr = x.ravel()
-            out = np.zeros_like(xr)
-            _evaluates[self.k](self.fs, xr, out, self.lbs, self.ubs, self.hs, self.n)
-            return out.reshape(x.shape)
+            outr = np.zeros_like(xr) if out is None else out.ravel()
+            _evaluates[self.k](self.fs, xr, outr, self.lbs, self.ubs, self.hs, self.n)
+            return outr.reshape(x.shape)
         else:
             return _evaluate1s[self.k](self.fs, x, self.lbs, self.ubs, self.hs, self.n)
     def _fit(self, a, b):

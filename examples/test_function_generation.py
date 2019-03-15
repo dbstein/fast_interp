@@ -1,6 +1,7 @@
 import numpy as np
 import fast_interp
 import time
+import numexpr as ne
 from scipy.special import struve
 
 n = 1000000
@@ -50,6 +51,23 @@ print('True time:       {:0.1f}'.format(true_func_time*1000))
 print('Approx time (5): {:0.1f}'.format(approx_func5_time*1000))
 print('Approx time (7): {:0.1f}'.format(approx_func7_time*1000))
 
+n = 5000
+x = np.random.rand(n)
+y = np.random.rand(n)
+r = np.empty([n, n], dtype=float)
+G = np.empty([n, n], dtype=float)
+tau = np.ones(n)
 
+def ker(x, y, tau, r, G):
+	xT = x[:,None]
+	yT = y[:,None]
+	ne.evaluate('sqrt((x-xT)**2 + (y-yT)**2)', out=r)
+	approx_func5(r, out=G)
+	return G.dot(tau)
+
+out = ker(x, y, tau, r, G)
+st = time.time()
+out = ker(x, y, tau, r, G)
+kernel_time = time.time()-st
 
 
