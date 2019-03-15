@@ -158,8 +158,27 @@ def _evaluate_3(fs, xs, out, lbs, ubs, hs, n):
 @numba.njit(parallel=True, fastmath=True)
 def _evaluate_5(fs, xs, out, lbs, ubs, hs, n):
     m = xs.shape[0]
-    for i in numba.prange(m):
-        out[i] = _evaluate1_5(fs, xs[i], lbs, ubs, hs, n)
+    for k in numba.prange(m):
+        x = xs[k]
+        ind = 0
+        while(x > ubs[ind]):
+            ind += 1
+        a = lbs[ind]
+        h = hs[ind]
+        xx = x - a
+        ix = min(int(xx//h), n-2)
+        ratx = xx/h - (ix+0.5)
+        asx = np.empty(6)
+        asx[0] =   3/256 + ratx*(   -9/1920 + ratx*( -5/48/2 + ratx*(  1/8/6 + ratx*( 1/2/24 -  1/8/120*ratx))))
+        asx[1] = -25/256 + ratx*(  125/1920 + ratx*( 39/48/2 + ratx*(-13/8/6 + ratx*(-3/2/24 +  5/8/120*ratx))))
+        asx[2] = 150/256 + ratx*(-2250/1920 + ratx*(-34/48/2 + ratx*( 34/8/6 + ratx*( 2/2/24 - 10/8/120*ratx))))
+        asx[3] = 150/256 + ratx*( 2250/1920 + ratx*(-34/48/2 + ratx*(-34/8/6 + ratx*( 2/2/24 + 10/8/120*ratx))))
+        asx[4] = -25/256 + ratx*( -125/1920 + ratx*( 39/48/2 + ratx*( 13/8/6 + ratx*(-3/2/24 -  5/8/120*ratx))))
+        asx[5] =   3/256 + ratx*(    9/1920 + ratx*( -5/48/2 + ratx*( -1/8/6 + ratx*( 1/2/24 +  1/8/120*ratx))))
+        out[k] = 0.0
+        for i in range(6):
+            out[k] += fs[ind, ix+i]*asx[i]
+        # out[i] = _evaluate1_5(fs, xs[i], lbs, ubs, hs, n)
 @numba.njit(parallel=True, fastmath=True)
 def _evaluate_7(fs, xs, out, lbs, ubs, hs, n):
     m = xs.shape[0]
