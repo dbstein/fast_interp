@@ -45,31 +45,11 @@ err5 = np.abs(fa5-ft)/reg
 err7 = np.abs(fa7-ft)/reg
 
 print('')
-print('Error (5):        {:0.1e}'.format(err5.max()))
-print('Error (7):        {:0.1e}'.format(err7.max()))
-print('True time:        {:0.1f}'.format(true_func_time*1000))
-print('Approx time (5):  {:0.1f}'.format(approx_func5_time*1000))
-print('Approx time (7):  {:0.1f}'.format(approx_func7_time*1000))
-
-n = 10000
-x = np.random.rand(n)
-y = np.random.rand(n)
-r = np.empty([n, n], dtype=float)
-G = np.empty([n, n], dtype=float)
-tau = np.ones(n)
-
-def ker(x, y, tau, r, G):
-	xT = x[:,None]
-	yT = y[:,None]
-	ne.evaluate('sqrt((x-xT)**2 + (y-yT)**2)', out=r)
-	approx_func5(r, out=G)
-	return G.dot(tau)
-
-out = ker(x, y, tau, r, G)
-st = time.time()
-out = ker(x, y, tau, r, G)
-kernel_time = time.time()-st
-
-print('Kernel Eval Time: {:0.1f}'.format(kernel_time*1000))
-
+print('Error (5):                       {:0.1e}'.format(err5.max()))
+print('Error (7):                       {:0.1e}'.format(err7.max()))
+print('True time:                       {:0.1f}'.format(true_func_time*1000))
+print('Approx time (5):                 {:0.1f}'.format(approx_func5_time*1000))
+print('Approx time (7):                 {:0.1f}'.format(approx_func7_time*1000))
+print('Points/Sec/Core, Thousands (5):  {:0.1f}'.format(n/approx_func5_time/1000))
+print('Points/Sec/Core, Thousands (7):  {:0.1f}'.format(n/approx_func7_time/1000))
 
