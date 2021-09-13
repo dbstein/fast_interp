@@ -626,7 +626,7 @@ class interp3d(object):
             or a ndarray of floats
         """
         if isinstance(xout, np.ndarray):
-            if xout.size > serial_cutoffs[2]:
+            if xout.size > serial_cutoffs[3]:
                 func = PAR_INTERP_3D[self.k]
             else:
                 func = SER_INTERP_3D[self.k]
