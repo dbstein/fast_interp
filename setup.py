@@ -10,7 +10,7 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
 
 setup(
     name='fast_interp',
-    version='0.0.1',
+    version='0.0.2',
     description='numba accelerated interpolation on regular grids in 1, 2, and 3 dimensions',
     long_description=long_description,
     url='https://github.com/dbstein/fast_interp/',

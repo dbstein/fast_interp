@@ -4,7 +4,6 @@ import scipy.interpolate
 import time
 from fast_interp import interp1d
 import matplotlib as mpl
-mpl.use('TkAgg')
 import matplotlib.pyplot as plt
 plt.ion()
 import gc

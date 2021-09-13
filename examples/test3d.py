@@ -4,7 +4,6 @@ import scipy.interpolate
 import time
 from fast_interp import interp3d
 import matplotlib as mpl
-mpl.use('TkAgg')
 import matplotlib.pyplot as plt
 plt.ion()
 import gc
@@ -56,8 +55,8 @@ ax.plot(ntest, my_errors[:,4], color='green',  label='Nonic')
 ax.plot(nts,  2*nts**-2,     color='black', alpha=0.9, label=r'$\mathcal{O}(h^2)$')
 ax.plot(nts,  0.5*nts**-4,   color='black', alpha=0.7, label=r'$\mathcal{O}(h^4)$')
 ax.plot(nts,  0.5*nts**-6,   color='black', alpha=0.5, label=r'$\mathcal{O}(h^6)$')
-ax.plot(nts2, 0.2*nts2**-8,  color='black', alpha=0.3, label=r'$\mathcal{O}(h^8)$')
-ax.plot(nts2, 0.2*nts2**-10, color='black', alpha=0.1, label=r'$\mathcal{O}(h^10)$')
+ax.plot(nts2, 2.0*nts2**-8,  color='black', alpha=0.3, label=r'$\mathcal{O}(h^8)$')
+ax.plot(nts2, 5.0*nts2**-10, color='black', alpha=0.1, label=r'$\mathcal{O}(h^{10})$')
 ax.set_xlabel(r'$n$')
 ax.set_ylabel('Maximum Error')
 ax.set_xscale('log')
@@ -93,30 +92,6 @@ gc.collect()
 
 ################################################################################
 # Test with periodic boundaries
-
-print('\n----- Testing Periodic Qunitic Interpolation, both directions -----')
-
-for n in [20, 40, 80, 160]:
-	print('...for n =', n)
-	v, h = np.linspace(0, 2*np.pi, n, endpoint=False, retstep=True)
-	x, y, z = np.meshgrid(v, v, v, indexing='ij')
-	xo = x[:-1, :-1, :-1].copy()
-	yo = y[:-1, :-1, :-1].copy()
-	zo = 2*z[:-1, :-1, :-1].copy()
-	xo += np.random.rand(*xo.shape)*h
-	yo += np.random.rand(*yo.shape)*h
-	zo += np.random.rand(*zo.shape)*h
-
-	test_function = lambda x, y, z: np.exp(np.sin(x))*np.cos(y) + np.sin(2*z)
-	f = test_function(x, y, z)
-	fa = test_function(xo, yo, zo)
-
-	interpolater = interp3d([0]*3, [2*np.pi]*3, [h]*3, f, k=5, p=[True]*3)
-	fe = interpolater(xo, yo, zo)
-	err = np.abs(fe - fa).max()
-	print('...Error is: {:0.1e}'.format(err))
-
-	gc.collect()
 
 print('\n----- Testing Periodic Linear Interpolation, x-direction -----')
 
@@ -170,6 +145,78 @@ for n in [20, 40, 80, 160]:
 
 	gc.collect()
 
+print('\n----- Testing Periodic Qunitic Interpolation, all directions -----')
+
+for n in [20, 40, 80, 160]:
+	print('...for n =', n)
+	v, h = np.linspace(0, 2*np.pi, n, endpoint=False, retstep=True)
+	x, y, z = np.meshgrid(v, v, v, indexing='ij')
+	xo = x[:-1, :-1, :-1].copy()
+	yo = y[:-1, :-1, :-1].copy()
+	zo = 2*z[:-1, :-1, :-1].copy()
+	xo += np.random.rand(*xo.shape)*h
+	yo += np.random.rand(*yo.shape)*h
+	zo += np.random.rand(*zo.shape)*h
+
+	test_function = lambda x, y, z: np.exp(np.sin(x))*np.cos(y) + np.sin(2*z)
+	f = test_function(x, y, z)
+	fa = test_function(xo, yo, zo)
+
+	interpolater = interp3d([0]*3, [2*np.pi]*3, [h]*3, f, k=5, p=[True]*3)
+	fe = interpolater(xo, yo, zo)
+	err = np.abs(fe - fa).max()
+	print('...Error is: {:0.1e}'.format(err))
+
+	gc.collect()
+
+print('\n----- Testing Periodic Septic Interpolation, all directions -----')
+
+for n in [20, 40, 80, 160]:
+	print('...for n =', n)
+	v, h = np.linspace(0, 2*np.pi, n, endpoint=False, retstep=True)
+	x, y, z = np.meshgrid(v, v, v, indexing='ij')
+	xo = x[:-1, :-1, :-1].copy()
+	yo = y[:-1, :-1, :-1].copy()
+	zo = 2*z[:-1, :-1, :-1].copy()
+	xo += np.random.rand(*xo.shape)*h
+	yo += np.random.rand(*yo.shape)*h
+	zo += np.random.rand(*zo.shape)*h
+
+	test_function = lambda x, y, z: np.exp(np.sin(x))*np.cos(y) + np.sin(2*z)
+	f = test_function(x, y, z)
+	fa = test_function(xo, yo, zo)
+
+	interpolater = interp3d([0]*3, [2*np.pi]*3, [h]*3, f, k=7, p=[True]*3)
+	fe = interpolater(xo, yo, zo)
+	err = np.abs(fe - fa).max()
+	print('...Error is: {:0.1e}'.format(err))
+
+	gc.collect()
+
+print('\n----- Testing Periodic Nonic Interpolation, both directions -----')
+
+for n in [20, 40, 80, 160]:
+	print('...for n =', n)
+	v, h = np.linspace(0, 2*np.pi, n, endpoint=False, retstep=True)
+	x, y, z = np.meshgrid(v, v, v, indexing='ij')
+	xo = x[:-1, :-1, :-1].copy()
+	yo = y[:-1, :-1, :-1].copy()
+	zo = 2*z[:-1, :-1, :-1].copy()
+	xo += np.random.rand(*xo.shape)*h
+	yo += np.random.rand(*yo.shape)*h
+	zo += np.random.rand(*zo.shape)*h
+
+	test_function = lambda x, y, z: np.exp(np.sin(x))*np.cos(y) + np.sin(2*z)
+	f = test_function(x, y, z)
+	fa = test_function(xo, yo, zo)
+
+	interpolater = interp3d([0]*3, [2*np.pi]*3, [h]*3, f, k=9, p=[True]*3)
+	fe = interpolater(xo, yo, zo)
+	err = np.abs(fe - fa).max()
+	print('...Error is: {:0.1e}'.format(err))
+
+	gc.collect()
+
 print('\n----- Single point on large grid far from edges -----')
 
 del interpolater
@@ -190,6 +237,8 @@ test_function = lambda x, y, z: np.exp(x)*np.exp(np.sin(y))*np.cos(z)
 f = test_function(x, y, z)
 fa = test_function(xo, yo, zo)
 
+interpolater = interp3d([0]*3, [1,2*np.pi,2*np.pi], [xh,yh,zh], f, k=5, p=[False,True,True], c=[False]*3)
+fe = interpolater(xo, yo, zo)
 st = time.time()
 interpolater = interp3d([0]*3, [1,2*np.pi,2*np.pi], [xh,yh,zh], f, k=5, p=[False,True,True], c=[False]*3)
 fe = interpolater(xo, yo, zo)

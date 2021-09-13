@@ -4,10 +4,10 @@ import scipy.interpolate
 import time
 from fast_interp import interp2d
 import matplotlib as mpl
-mpl.use('TkAgg')
 import matplotlib.pyplot as plt
 plt.ion()
 import gc
+gc.disable()
 
 ################################################################################
 # Basic error sweep
@@ -22,8 +22,6 @@ my_setup_time = np.zeros([ntest.shape[0], len(ktest)], dtype=float)
 sp_setup_time = np.zeros([ntest.shape[0], len(ktest)], dtype=float)
 my_eval_time = np.zeros([ntest.shape[0], len(ktest)], dtype=float)
 sp_eval_time = np.zeros([ntest.shape[0], len(ktest)], dtype=float)
-
-gc.disable()
 
 random_noise_size = 0.0
 
@@ -164,26 +162,6 @@ print('...Error in interpolating to shaped array: {:0.1e}'.format(err))
 ################################################################################
 # Test with periodic boundaries
 
-print('\n----- Testing Periodic Qunitic Interpolation, both directions -----')
-
-for n in [20, 40, 80, 160]:
-	print('...for n =', n)
-	a = 0.0
-	b = 2*np.pi
-	v, h = np.linspace(a, b, n, endpoint=False, retstep=True)
-	x, y = np.meshgrid(v, v, indexing='ij')
-	xo = np.random.rand(*x.shape)*10
-	yo = np.random.rand(*x.shape)*10
-
-	test_function = lambda x, y: np.exp(np.sin(x))*np.cos(y)
-	f = test_function(x, y)
-	fa = test_function(xo, yo)
-
-	interpolater = interp2d([a,a], [b,b], [h,h], f, k=5, p=[True,True])
-	fe = interpolater(xo, yo)
-	err = np.abs(fe - fa).max()
-	print('...Error is: {:0.1e}'.format(err))
-
 print('\n----- Testing Periodic Linear Interpolation, x-direction -----')
 
 for n in [20, 40, 80, 160]:
@@ -226,6 +204,46 @@ for n in [20, 40, 80, 160]:
 	fa = test_function(xo, yo)
 
 	interpolater = interp2d([ax,ay], [bx,by], [xh,yh], f, k=3, p=[False,True])
+	fe = interpolater(xo, yo)
+	err = np.abs(fe - fa).max()
+	print('...Error is: {:0.1e}'.format(err))
+
+print('\n----- Testing Periodic Septic Interpolation, both directions -----')
+
+for n in [20, 40, 80, 160]:
+	print('...for n =', n)
+	a = 0.0
+	b = 2*np.pi
+	v, h = np.linspace(a, b, n, endpoint=False, retstep=True)
+	x, y = np.meshgrid(v, v, indexing='ij')
+	xo = np.random.rand(*x.shape)*10
+	yo = np.random.rand(*x.shape)*10
+
+	test_function = lambda x, y: np.exp(np.sin(x))*np.cos(y)
+	f = test_function(x, y)
+	fa = test_function(xo, yo)
+
+	interpolater = interp2d([a,a], [b,b], [h,h], f, k=7, p=[True,True])
+	fe = interpolater(xo, yo)
+	err = np.abs(fe - fa).max()
+	print('...Error is: {:0.1e}'.format(err))
+
+print('\n----- Testing Periodic Nonic Interpolation, both directions -----')
+
+for n in [20, 40, 80, 160]:
+	print('...for n =', n)
+	a = 0.0
+	b = 2*np.pi
+	v, h = np.linspace(a, b, n, endpoint=False, retstep=True)
+	x, y = np.meshgrid(v, v, indexing='ij')
+	xo = np.random.rand(*x.shape)*10
+	yo = np.random.rand(*x.shape)*10
+
+	test_function = lambda x, y: np.exp(np.sin(x))*np.cos(y)
+	f = test_function(x, y)
+	fa = test_function(xo, yo)
+
+	interpolater = interp2d([a,a], [b,b], [h,h], f, k=9, p=[True,True])
 	fe = interpolater(xo, yo)
 	err = np.abs(fe - fa).max()
 	print('...Error is: {:0.1e}'.format(err))
