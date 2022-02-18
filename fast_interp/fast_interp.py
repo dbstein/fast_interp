@@ -71,7 +71,7 @@ def _extrapolate1d_y(f, k, o):
 def _extrapolate1d_z(f, k, o):
     for ix in range(o):
         il = o-ix-1
-        ih = f.shape[1]-(o-ix)
+        ih = f.shape[2]-(o-ix)
         if k == 1:
             f[:,:,il] = 2*f[:,:,il+1] - 1*f[:,:,il+2]
             f[:,:,ih] = 2*f[:,:,ih-1] - 1*f[:,:,ih-2]
